@@ -30,12 +30,14 @@ except Exception:
         vectors_config=models.VectorParams(size=768, distance=models.Distance.COSINE),
     )
 try:
-    qdrant_client.get_collection("documents")
+    qdrant_client.delete_collection("documents")
 except Exception:
-    qdrant_client.create_collection(
-        collection_name="documents",
-        vectors_config=models.VectorParams(size=1536, distance=models.Distance.COSINE),
-    )
+    pass
+
+qdrant_client.create_collection(
+    collection_name="documents",
+    vectors_config=models.VectorParams(size=768, distance=models.Distance.COSINE),
+)
 
 # Include routers
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])

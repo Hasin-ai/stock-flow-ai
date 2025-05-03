@@ -4,10 +4,14 @@ import uuid
 from typing import List, Dict, Any
 from fastapi import HTTPException
 from app.schemas.pdf_document import DocumentMetadata, DocumentChunk, DocumentAnalysis
-from app.services.gemini import analyze_with_gemini
+from app.services.gemini import analyze_with_gemini, search_vector_db, detect_query_type
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 from app.config import settings
+import google.generativeai as genai
+
+# Initialize Gemini API
+genai.configure(api_key=settings.gemini_api_key)
 
 qdrant_client = QdrantClient(url=settings.qdrant_url)
 
@@ -77,17 +81,18 @@ async def chunk_document(pages: List[Dict[str, Any]], doc_id: str, chunk_size: i
             ))
     return chunks
 
+# filepath: g:\AI Hackathon\stock_flow_ai\backend\app\services\pdf_processor.py
 async def generate_embedding(text: str) -> List[float]:
     try:
         embedding_response = genai.embed_content(
             model="models/embedding-001",
             content=text,
-            task_type="SEMANTIC_SIMILARITY"
+            task_type="RETRIEVAL_DOCUMENT"  # This produces 1536-dim embeddings
         )
         return embedding_response['embedding']
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating embedding: {str(e)}")
-
+    
 async def store_in_vector_db(chunks: List[DocumentChunk], doc_id: str, metadata: DocumentMetadata) -> List[str]:
     try:
         embedding_ids = []

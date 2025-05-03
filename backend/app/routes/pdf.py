@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.pdf_document import DocumentUploadResponse, DocumentQuery, DocumentQueryResponse, QueryType
-from app.services.pdf_processor import extract_text_from_pdf, extract_metadata_from_pdf, chunk_document, generate_embedding, store_in_vector_db, analyze_document, search_vector_db, detect_query_type, analyze_with_gemini
+from app.services.pdf_processor import extract_text_from_pdf, extract_metadata_from_pdf, chunk_document, generate_embedding, store_in_vector_db, analyze_document
+from app.services.gemini import search_vector_db, detect_query_type, analyze_with_gemini
 from app.dependencies import get_client_user
 from app.models.user import User
 from app.models.activity_log import ActivityLog

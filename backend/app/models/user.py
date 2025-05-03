@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Enum
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 from app.database import Base
 import enum
 
@@ -15,3 +15,8 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     role = Column(Enum(UserRole), nullable=False, default=UserRole.client)
+    
+    # Add these relationships
+    activity_logs = relationship("ActivityLog", back_populates="user")
+    trade_requests = relationship("TradeRequest", back_populates="user")
+    cart_items = relationship("StockCart", back_populates="user")
