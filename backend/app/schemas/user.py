@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
-from app.models.user import UserRole
+from app.models.user import UserRole, ApprovalStatus
 
 class UserBase(BaseModel):
     email: EmailStr
@@ -8,7 +8,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
-    role: UserRole = UserRole.client
+    role: UserRole = UserRole.client  # Default role is client
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -17,6 +17,7 @@ class UserLogin(BaseModel):
 class UserOut(UserBase):
     id: int
     role: UserRole
+    approval_status: ApprovalStatus
 
     class Config:
         orm_mode = True
@@ -28,3 +29,4 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     email: Optional[EmailStr] = None
     role: Optional[str] = None
+    approval_status: Optional[str] = None

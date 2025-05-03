@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models.user import User, UserRole
+from app.models.user import User, UserRole, ApprovalStatus
 from app.models.trade_request import TradeRequest, TradeStatus
 from app.models.activity_log import ActivityLog
 from app.schemas.user import UserCreate, UserOut
@@ -18,30 +18,113 @@ async def get_clients(
 ):
     return db.query(User).filter(User.role == UserRole.client).all()
 
+@router.get("/pending-registrations", response_model=List[UserOut])
+async def get_pending_registrations(
+    current_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    return db.query(User).filter(
+        User.role == UserRole.client,
+        User.approval_status == ApprovalStatus.pending
+    ).all()
+
+@router.post("/approve-client/{user_id}", response_model=UserOut)
+async def approve_client(
+    user_id: int,
+    current_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(
+        User.id == user_id,
+        User.role == UserRole.client,
+        User.approval_status == ApprovalStatus.pending
+    ).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="Pending user registration not found")
+    
+    user.approval_status = ApprovalStatus.approved
+    
+    # Log the approval action
+    log = ActivityLog(
+        user_id=current_user.id,
+        action=f"Approved client registration for user {user.email}"
+    )
+    db.add(log)
+    
+    db.commit()
+    db.refresh(user)
+    return user
+
+@router.post("/reject-client/{user_id}", response_model=UserOut)
+async def reject_client(
+    user_id: int,
+    current_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(
+        User.id == user_id,
+        User.role == UserRole.client,
+        User.approval_status == ApprovalStatus.pending
+    ).first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="Pending user registration not found")
+    
+    user.approval_status = ApprovalStatus.rejected
+    
+    # Log the rejection action
+    log = ActivityLog(
+        user_id=current_user.id,
+        action=f"Rejected client registration for user {user.email}"
+    )
+    db.add(log)
+    
+    db.commit()
+    db.refresh(user)
+    return user
+
 @router.post("/clients", response_model=UserOut)
 async def create_client(
     user: UserCreate,
     current_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
-    from app.routes.auth import get_password_hash
-    db_user = db.query(User).filter(User.email == user.email).first()
-    if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    db_user = db.query(User).filter(User.username == user.username).first()
-    if db_user:
-        raise HTTPException(status_code=400, detail="Username already taken")
-    hashed_password = get_password_hash(user.password)
-    db_user = User(
-        email=user.email,
-        username=user.username,
-        hashed_password=hashed_password,
-        role=UserRole.client
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+    try:
+        from app.routes.auth import get_password_hash
+        db_user = db.query(User).filter(User.email == user.email).first()
+        if db_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
+        db_user = db.query(User).filter(User.username == user.username).first()
+        if db_user:
+            raise HTTPException(status_code=400, detail="Username already taken")
+        hashed_password = get_password_hash(user.password)
+        
+        # Admin-created clients are automatically approved
+        db_user = User(
+            email=user.email,
+            username=user.username,
+            hashed_password=hashed_password,
+            role=UserRole.client,
+            approval_status=ApprovalStatus.approved
+        )
+        
+        db.add(db_user)
+        
+        # Log the client creation action
+        log = ActivityLog(
+            user_id=current_user.id,
+            action=f"Created new client account for {user.email}"
+        )
+        db.add(log)
+        
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+    except Exception as e:
+        db.rollback()
+        print(f"Admin client creation error: {str(e)}")
+        raise HTTPException(status_code=500, detail="An error occurred creating the client")
 
 @router.delete("/clients/{user_id}", response_model=dict)
 async def delete_client(

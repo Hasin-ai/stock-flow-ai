@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Enum
+from sqlalchemy import Column, Integer, String, Enum, Boolean
 from sqlalchemy.orm import relationship
 from app.database import Base
 import enum
@@ -6,6 +6,11 @@ import enum
 class UserRole(str, enum.Enum):
     client = "client"
     admin = "admin"
+
+class ApprovalStatus(str, enum.Enum):
+    pending = "pending"
+    approved = "approved"
+    rejected = "rejected"
 
 class User(Base):
     __tablename__ = "users"
@@ -15,6 +20,7 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     role = Column(Enum(UserRole), nullable=False, default=UserRole.client)
+    approval_status = Column(Enum(ApprovalStatus), nullable=False, default=ApprovalStatus.pending)
     
     # Add these relationships
     activity_logs = relationship("ActivityLog", back_populates="user")

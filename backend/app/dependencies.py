@@ -7,7 +7,7 @@ from app.config import settings
 from app.schemas.user import TokenData
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models.user import User
+from app.models.user import User, ApprovalStatus
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
@@ -39,6 +39,14 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     user = db.query(User).filter(User.email == token_data.email).first()
     if user is None:
         raise credentials_exception
+    
+    # Check if client user is approved
+    if user.role == "client" and user.approval_status != ApprovalStatus.approved:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Your account is {user.approval_status}. Please wait for admin approval."
+        )
+    
     return user
 
 async def get_client_user(current_user: User = Depends(get_current_user)):
