@@ -1,55 +1,54 @@
 ### THIS FILE IS FOR DUMMY MIGRATING THE DATABASE SCHEMA ###
 
-
-
-from app.database import engine, Base, get_db
-from app.models.user import User, ApprovalStatus
-from app.models.activity_log import ActivityLog
-from app.models.trade_request import TradeRequest
+import logging
+import sqlalchemy
+from sqlalchemy.exc import SQLAlchemyError
+from app.database import engine, Base
+from app.models.user import User  # Import User model first since it's referenced by StockCart
 from app.models.stock_cart import StockCart
-from sqlalchemy import text
+from app.models.trade_request import TradeRequest
+from app.models.activity_log import ActivityLog
 
-# Check if column exists
-def column_exists(column_name, table_name):
-    with engine.connect() as connection:
-        result = connection.execute(text(
-            f"SELECT EXISTS (SELECT 1 FROM information_schema.columns "
-            f"WHERE table_name='users' AND column_name='{column_name}');"
-        ))
-        return result.scalar()
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Add column if it doesn't exist
-def add_approval_status_column():
-    if not column_exists('approval_status', 'users'):
-        print("Adding approval_status column to users table...")
-        with engine.connect() as connection:
-            # Create enum type if it doesn't exist
-            connection.execute(text(
-                "DO $$ BEGIN "
-                "    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'approvalstatus') THEN "
-                "        CREATE TYPE approvalstatus AS ENUM ('pending', 'approved', 'rejected'); "
-                "    END IF; "
-                "END $$;"
-            ))
-            # Add column with default value
-            connection.execute(text(
-                "ALTER TABLE users ADD COLUMN approval_status approvalstatus "
-                "NOT NULL DEFAULT 'pending';"
-            ))
-            connection.commit()
-            print("Column added successfully!")
-    else:
-        print("approval_status column already exists in users table")
-
-# This will attempt to create the tables with all current model definitions
-def recreate_schema():
+def migrate_database():
+    """
+    Migrate the database tables in the correct order to respect foreign key constraints
+    """
     try:
-        print("Creating tables based on current models...")
-        Base.metadata.create_all(bind=engine)
-        print("Schema update completed successfully!")
-    except Exception as e:
-        print(f"Error updating schema: {str(e)}")
+        # Check if stock_carts table exists and drop it
+        inspector = sqlalchemy.inspect(engine)
+        if 'stock_carts' in inspector.get_table_names():
+            logger.info("Dropping existing stock_carts table...")
+            StockCart.__table__.drop(engine)
+            logger.info("Table dropped successfully")
+        
+        # Create all tables in the correct order
+        logger.info("Creating tables in proper order...")
+        
+        # First, ensure the users table exists
+        if 'users' not in inspector.get_table_names():
+            logger.info("Creating users table...")
+            User.__table__.create(engine)
+            logger.info("Users table created successfully")
+        
+        # Now create the stock_carts table with proper foreign key
+        logger.info("Creating stock_carts table with updated schema...")
+        StockCart.__table__.create(engine)
+        logger.info("Table created successfully with columns: id, user_id, symbol, quantity, price, trade_type")
+        
+        return True
+    except SQLAlchemyError as e:
+        logger.error(f"Error during migration: {str(e)}")
+        return False
 
 if __name__ == "__main__":
-    add_approval_status_column()
-    recreate_schema()
+    logger.info("Starting database migration...")
+    success = migrate_database()
+    
+    if success:
+        logger.info("Migration completed successfully")
+    else:
+        logger.error("Migration failed")
