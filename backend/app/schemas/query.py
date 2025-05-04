@@ -27,7 +27,7 @@ class StockQuery(BaseModel):
     symbols: Optional[List[str]] = None
 
 class StockResponse(BaseModel):
-    query: str
-    response: str
+    query: Optional[str] = None
+    response: Optional[str] = None
     data: Optional[List[StockData]] = None
     query_type: QueryType
