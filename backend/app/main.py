@@ -11,7 +11,7 @@ app = FastAPI(title="Stock Trading Web Application")
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_url, settings.qdrant_url],
+    allow_origins=["http://127.0.0.1:5500", settings.qdrant_url],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

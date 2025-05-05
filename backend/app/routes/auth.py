@@ -71,7 +71,8 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
         )
     
     access_token = create_access_token(
-        data={"sub": user.email, "role": user.role.value, "approval_status": user.approval_status.value},
+        data={"sub": user.email, "role": user.role.value, "approval_status": user.approval_status.value, "user_id": user.id},
         expires_delta=timedelta(seconds=3600)
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    
+    return {"access_token": access_token, "token_type": "bearer", "user_id": user.id}
