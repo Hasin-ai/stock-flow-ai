@@ -14,6 +14,7 @@ class TradeRequest(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     symbol = Column(String, nullable=False)
+    name = Column(String, nullable=True)  # Stock name
     quantity = Column(Integer, nullable=False)
     price = Column(Float, nullable=False)
     trade_type = Column(String, nullable=False)  # "buy" or "sell"

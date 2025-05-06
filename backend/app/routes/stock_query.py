@@ -106,22 +106,23 @@ async def query_stock(
 
             # print(f"inside list scope")
 
-            # Search vector DB for relevant stocks
-            matching_stocks = await search_vector_db(query_data.query, collection="stocks")
+            # Comment out vector DB search for now
+            # matching_stocks = await search_vector_db(query_data.query, collection="stocks")
             
-            # If we have matches from vector DB, use those symbols
-            if (matching_stocks and len(matching_stocks) > 0):
-                symbols = [stock.get("symbol") for stock in matching_stocks if "symbol" in stock]
-            # Otherwise, ask Gemini to suggest stocks
-            else:
-                suggestion_prompt = f"""
-                Based on this query: '{query_data.query}'
-                Suggest 3-5 stock symbols that would be relevant for this query.
-                Return only the symbols separated by commas without any explanation.
-                Example: AAPL, MSFT, GOOG
-                """
-                symbols_text = await analyze_with_gemini(suggestion_prompt)
-                symbols = [s.strip() for s in symbols_text.split(",")]
+            # # If we have matches from vector DB, use those symbols
+            # if (matching_stocks and len(matching_stocks) > 0):
+            #     symbols = [stock.get("symbol") for stock in matching_stocks if "symbol" in stock]
+            # # Otherwise, ask Gemini to suggest stocks
+
+            # Always ask Gemini to suggest stocks
+            suggestion_prompt = f"""
+            Based on this query: '{query_data.query}'
+            Suggest 3-5 stock symbols that would be relevant for this query.
+            Return only the symbols separated by commas without any explanation.
+            Example: AAPL, MSFT, GOOG
+            """
+            symbols_text = await analyze_with_gemini(suggestion_prompt)
+            symbols = [s.strip() for s in symbols_text.split(",")]
             
             # Fetch comprehensive data for each stock
             stock_data_list = []

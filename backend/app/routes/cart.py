@@ -24,18 +24,34 @@ async def add_to_cart(
 ):
     try:
         logger.debug(f"Adding to cart: {cart_item}")
-        db_cart = StockCart(
-            user_id=current_user.id, 
-            symbol=cart_item.symbol,
-            name=cart_item.name,  # Added name field
-            quantity=cart_item.quantity,
-            price=cart_item.price,
-            trade_type=cart_item.trade_type
-        )
-        db.add(db_cart)
-        db.commit()
-        db.refresh(db_cart)
-        return db_cart
+        
+        # Check if the item already exists in the cart (same symbol and trade_type)
+        existing_item = db.query(StockCart).filter(
+            StockCart.user_id == current_user.id,
+            StockCart.symbol == cart_item.symbol,
+            StockCart.trade_type == cart_item.trade_type
+        ).first()
+        
+        if existing_item:
+            # Update the quantity of the existing item
+            existing_item.quantity += cart_item.quantity
+            db.commit()
+            db.refresh(existing_item)
+            return existing_item
+        else:
+            # Create a new cart item
+            db_cart = StockCart(
+                user_id=current_user.id, 
+                symbol=cart_item.symbol,
+                name=cart_item.name,  # Added name field
+                quantity=cart_item.quantity,
+                price=cart_item.price,
+                trade_type=cart_item.trade_type
+            )
+            db.add(db_cart)
+            db.commit()
+            db.refresh(db_cart)
+            return db_cart
     except Exception as e:
         db.rollback()
         logger.error(f"Error adding to cart: {str(e)}")
@@ -91,6 +107,7 @@ async def place_orders_from_cart(
         trade_request = TradeRequest(
             user_id=current_user.id,
             symbol=item.symbol,
+            name=item.name,  # Add the stock name
             quantity=item.quantity,
             price=item.price,
             trade_type=item.trade_type,

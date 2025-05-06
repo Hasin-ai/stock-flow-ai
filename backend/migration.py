@@ -2,11 +2,11 @@
 from app.database import engine
 from sqlalchemy import text
 
-def add_name_column():
+def add_name_column_to_trade_requests():
     with engine.connect() as conn:
-        conn.execute(text("ALTER TABLE stock_carts ADD COLUMN name VARCHAR;"))
+        conn.execute(text("ALTER TABLE trade_requests ADD COLUMN name VARCHAR;"))
         conn.commit()
 
 if __name__ == "__main__":
-    add_name_column()
-    print("Column 'name' added to stock_carts table")
+    add_name_column_to_trade_requests()
+    print("Column 'name' added to trade_requests table")
