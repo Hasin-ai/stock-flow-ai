@@ -1,5 +1,5 @@
 from fastapi import APIRouter, WebSocket, Depends, HTTPException, status
-from app.dependencies import get_client_user, get_admin_user, get_current_user
+from app.dependencies import get_client_user, get_admin_user, get_current_user, get_token_from_websocket
 from app.models.user import User
 from app.services.websocket_service import WebSocketService
 from app.database import get_db
@@ -9,36 +9,50 @@ from app.models.chat_message import ChatMessage
 from app.schemas.chat_message import ChatMessageOut, ChatMessageCreate, ChatMessageUpdate
 import json
 
-router = APIRouter()
+# Explicitly set the prefix to /ws for proper route mounting
+router = APIRouter(prefix="/ws")
 
 websocket_service = WebSocketService()
 
 # WebSocket endpoints for both clients and admins
-@router.websocket("/ws/chat")
-async def chat_websocket(websocket: WebSocket, token: Optional[str] = None, db: Session = Depends(get_db)):
-    if token is None:
+@router.websocket("/chat")
+async def chat_websocket(websocket: WebSocket, db: Session = Depends(get_db)):
+    try:
+        token = await get_token_from_websocket(websocket)
+        current_user = await get_current_user(token=token, db=db)
+    except Exception as e:
+        await websocket.accept()
+        await websocket.send_json({
+            "error": "Authentication failed",
+            "details": str(e)
+        })
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
     
     try:
-        # Get the user based on token
-        from app.dependencies import get_current_user_from_token
-        user = await get_current_user_from_token(token, db)
+        await websocket_service.connect(websocket, current_user)
+        await websocket_service.debug_connection(websocket, token, current_user)
         
-        # Connect to the WebSocket
-        await websocket_service.connect(websocket, user)
-        
-        try:
-            while True:
-                data = await websocket.receive_text()
-                await websocket_service.process_message(data, user, db)
-        except Exception as e:
-            print(f"WebSocket error: {str(e)}")
-        finally:
-            websocket_service.disconnect(user.id)
+        while True:
+            data = await websocket.receive_text()
+            await websocket_service.process_message(data, current_user, db)
     except Exception as e:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-        print(f"Authentication error: {str(e)}")
+        print(f"WebSocket error: {str(e)}")
+    finally:
+        websocket_service.disconnect(current_user.id)
+
+# Debug endpoint to test authentication
+@router.get("/debug/token", response_model=dict)
+async def debug_token(
+    current_user: User = Depends(get_current_user),
+):
+    """Endpoint to check if authentication is working properly"""
+    return {
+        "auth_status": "success",
+        "user_id": current_user.id,
+        "username": current_user.username,
+        "role": current_user.role
+    }
 
 # REST API endpoints for chat functionality
 

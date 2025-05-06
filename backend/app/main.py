@@ -11,7 +11,7 @@ app = FastAPI(title="Stock Trading Web Application")
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5500", settings.qdrant_url],
+    allow_origins=["*"],  # Allow all origins for development, restrict for production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -47,7 +47,13 @@ app.include_router(pdf.router, prefix="/api/pdf", tags=["PDF Operations"])
 app.include_router(cart.router, prefix="/api/cart", tags=["Stock Cart"])
 app.include_router(trade.router, prefix="/api/trade", tags=["Trade Requests"])
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin Operations"])
-app.include_router(websocket.router, prefix="/ws", tags=["WebSocket"])
+
+# WebSocket router is already prefixed with /ws in the router definition
+# Just mount it in two ways:
+# 1. Mount with /api prefix for REST API endpoints
+app.include_router(websocket.router, prefix="/api", tags=["WebSocket API"])
+# 2. Mount without additional prefix for WebSocket endpoint
+app.include_router(websocket.router, tags=["WebSocket Endpoints"])
 
 @app.on_event("startup")
 async def startup_event():

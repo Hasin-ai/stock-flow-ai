@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, WebSocket
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
@@ -86,3 +86,16 @@ async def get_admin_user(current_user: User = Depends(get_current_user)):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Not authorized as Admin")
     return current_user
+
+async def get_token_from_websocket(websocket: WebSocket) -> str:
+    """
+    Extract token from WebSocket query parameters.
+    The token is expected in the format: ws://server/ws/chat?token=xyz
+    """
+    token = websocket.query_params.get("token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing authentication token",
+        )
+    return token
