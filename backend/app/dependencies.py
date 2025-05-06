@@ -49,6 +49,34 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     
     return user
 
+async def get_current_user_from_token(token: str, db: Session):
+    """Helper function to get user from token string (for WebSocket auth)"""
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+        email: str = payload.get("sub")
+        role: str = payload.get("role")
+        if email is None or role is None:
+            raise credentials_exception
+        token_data = TokenData(email=email, role=role)
+    except JWTError:
+        raise credentials_exception
+    user = db.query(User).filter(User.email == token_data.email).first()
+    if user is None:
+        raise credentials_exception
+    
+    # Check if client user is approved
+    if user.role == "client" and user.approval_status != ApprovalStatus.approved:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Your account is {user.approval_status}. Please wait for admin approval."
+        )
+    return user
+
 async def get_client_user(current_user: User = Depends(get_current_user)):
     if current_user.role != "client":
         raise HTTPException(status_code=403, detail="Not authorized as Client")

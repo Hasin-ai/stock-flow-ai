@@ -81,14 +81,21 @@ async def query_pdf(
         db.add(db_log)
         db.commit()
 
-        # If query type not specified, detect it
+        # Auto-detect query type if not specified
         if not query_data.query_type:
-            query_data.query_type = await detect_query_type(query_data.query, query_data.doc_id)
+            detected_type = await detect_query_type(query_data.query, "pdf" if query_data.doc_id else None)
+            # Map the string result to the actual enum
+            if detected_type == "SPECIFIC":
+                query_data.query_type = QueryType.SPECIFIC
+            elif detected_type == "COMPARATIVE":
+                query_data.query_type = QueryType.COMPARATIVE
+            else:
+                query_data.query_type = QueryType.GENERAL
         
         # Process based on query type
         if query_data.query_type == QueryType.SPECIFIC and query_data.doc_id:
             # Search vector DB for relevant chunks
-            relevant_chunks = await search_vector_db(query_data.query, query_data.doc_id)
+            relevant_chunks = await search_vector_db(query_data.query, "documents", query_data.doc_id)
             
             if not relevant_chunks:
                 return DocumentQueryResponse(
@@ -111,6 +118,10 @@ async def query_pdf(
             {context}
             
             Provide a detailed answer based solely on the information provided in these excerpts.
+            Include relevant quotes or page numbers where applicable.
+            
+            If the document excerpts don't contain enough information to answer the query fully,
+            acknowledge this limitation in your response.
             """
             
             analysis = await analyze_with_gemini(analysis_prompt)
@@ -125,7 +136,7 @@ async def query_pdf(
         
         elif query_data.query_type == QueryType.COMPARATIVE:
             # Search across all documents or specified documents
-            relevant_chunks = await search_vector_db(query_data.query, query_data.doc_id, limit=10)
+            relevant_chunks = await search_vector_db(query_data.query, "documents", query_data.doc_id, limit=10)
             
             if not relevant_chunks:
                 return DocumentQueryResponse(
@@ -160,6 +171,10 @@ async def query_pdf(
             {comparison_context}
             
             Provide a detailed comparison based on the information provided in these excerpts.
+            Include relevant quotes or page numbers to support your analysis.
+            
+            Structure your answer to clearly identify similarities and differences between 
+            the documents or sections being compared.
             """
             
             analysis = await analyze_with_gemini(analysis_prompt)
@@ -180,6 +195,13 @@ async def query_pdf(
             {query_data.query}
             
             Provide a detailed but concise response with factual information.
+            If the question is about analyzing financial documents specifically:
+            1. Mention common sections of financial reports to look for
+            2. Explain key metrics or terminology that might be relevant
+            3. Suggest approaches for extracting valuable insights
+            
+            Format your response in a clear, easy-to-read structure with bullet points 
+            or numbered lists where appropriate.
             """
             
             analysis = await analyze_with_gemini(prompt)

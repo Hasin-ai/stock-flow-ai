@@ -27,6 +27,7 @@ async def add_to_cart(
         db_cart = StockCart(
             user_id=current_user.id, 
             symbol=cart_item.symbol,
+            name=cart_item.name,  # Added name field
             quantity=cart_item.quantity,
             price=cart_item.price,
             trade_type=cart_item.trade_type

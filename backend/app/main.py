@@ -34,9 +34,10 @@ try:
 except Exception:
     pass
 
+# Create documents collection with 1536 dimensions for Gemini embeddings
 qdrant_client.create_collection(
     collection_name="documents",
-    vectors_config=models.VectorParams(size=768, distance=models.Distance.COSINE),
+    vectors_config=models.VectorParams(size=1536, distance=models.Distance.COSINE),
 )
 
 # Include routers

@@ -1,0 +1,36 @@
+[
+  {
+    "timestamp": "2025-05-05T18:30:18.760022",
+    "query": "overview of apple stock",
+    "query_type": "QueryType.SINGLE",
+    "response": "Apple stock (AAPL) currently trades at $205.35, down 3.74% today with high volume, suggesting potential downward pressure.  The market capitalization remains massive at $3.16 trillion.\n\n**Fundamentals:** A P/E ratio of 33.36 indicates the market values Apple at a premium, possibly reflecting expected future growth. While the EPS of $6.3 is healthy, the low revenue growth of 2.02% raises concerns.  High debt-to-equity of 5.41 signals significant reliance on borrowed funds.\n\n**Technicals:**  Missing 52-week, 30-day, and 50-day moving average data prevents a meaningful technical analysis.  The RSI of 48.05 suggests the stock is neither overbought nor oversold.\n\n**Sentiment:** A positive news sentiment score of 0.18 implies generally favorable news coverage, though further investigation is needed.\n\n**Risks:** A beta of 1.26 indicates Apple is more volatile than the overall market.  The high debt level and slow revenue growth represent company-specific risks. Missing technical indicators limit analysis of short-term price trends.\n\n\n**Recommendation:** Given the high valuation, slow revenue growth, and substantial debt, coupled with the lack of usable technical data, a **HOLD** rating is recommended.  A price target cannot be reliably determined without additional technical data.  Investors should carefully monitor Apple's revenue growth and debt management for future performance indications.  Further research into the drivers behind recent price declines is also advisable.\n",
+    "data": [
+      {
+        "symbol": "AAPL",
+        "name": "Apple Inc",
+        "current_price": 205.35,
+        "change_percent": -3.7362,
+        "market_cap": 3156744077000.0,
+        "pe_ratio": 33.36,
+        "dividend_yield": 0.0048,
+        "volume": 101010621,
+        "high_52week": 0.0,
+        "low_52week": 0.0,
+        "additional_data": {
+          "open": 206.09,
+          "high": 206.99,
+          "low": 202.16,
+          "eps": 6.3,
+          "beta": 1.259,
+          "revenue_growth": 0.020219940775141214,
+          "debt_to_equity": 5.408779631255487,
+          "30d_high": 0.0,
+          "30d_low": 0.0,
+          "50d_sma": 0.0,
+          "rsi": 48.0526,
+          "sentiment_score": 0.18215330000000002
+        }
+      }
+    ]
+  }
+]

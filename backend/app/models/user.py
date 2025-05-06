@@ -26,3 +26,7 @@ class User(Base):
     activity_logs = relationship("ActivityLog", back_populates="user")
     trade_requests = relationship("TradeRequest", back_populates="user")
     cart_items = relationship("StockCart", back_populates="user")
+    
+    # Chat message relationships
+    sent_messages = relationship("ChatMessage", foreign_keys="ChatMessage.sender_id", back_populates="sender")
+    received_messages = relationship("ChatMessage", foreign_keys="ChatMessage.receiver_id", back_populates="receiver")

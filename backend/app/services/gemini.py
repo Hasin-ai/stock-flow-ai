@@ -47,17 +47,20 @@ async def detect_query_type(query: str, context: str = "stock") -> str:
         response = await analyze_with_gemini(prompt)
         return response.strip().upper()
     except Exception:
+        # Provide a reasonable default if query type detection fails
         return "GENERAL" if context == "stock" else "SPECIFIC"
 
 async def search_vector_db(query: str, collection: str, doc_id: str = None, limit: int = 5) -> list:
     try:
+        # Generate embedding for the query
         embedding_response = genai.embed_content(
             model="models/embedding-001",
             content=query,
-            task_type="SEMANTIC_SIMILARITY"
+            task_type="RETRIEVAL_QUERY"  # Use RETRIEVAL_QUERY for queries - matches with RETRIEVAL_DOCUMENT
         )
         embedding = embedding_response['embedding']
         
+        # Create filter if doc_id is provided
         search_filter = None
         if doc_id and collection == "documents":
             search_filter = models.Filter(
@@ -69,6 +72,7 @@ async def search_vector_db(query: str, collection: str, doc_id: str = None, limi
                 ]
             )
         
+        # Execute search
         search_results = qdrant_client.search(
             collection_name=collection,
             query_vector=embedding,
@@ -76,6 +80,7 @@ async def search_vector_db(query: str, collection: str, doc_id: str = None, limi
             query_filter=search_filter
         )
         
+        # Format results based on collection type
         results = []
         for result in search_results:
             if collection == "stocks":
@@ -92,4 +97,9 @@ async def search_vector_db(query: str, collection: str, doc_id: str = None, limi
                 })
         return results
     except Exception as e:
+        # Log the error details for debugging
+        import traceback
+        error_details = f"Error searching vector database: {str(e)}\n{traceback.format_exc()}"
+        print(error_details)
+        
         raise HTTPException(status_code=500, detail=f"Error searching vector database: {str(e)}")

@@ -98,31 +98,57 @@ async def store_in_vector_db(chunks: List[DocumentChunk], doc_id: str, metadata:
         embedding_ids = []
         
         for chunk in chunks:
-            embedding = await generate_embedding(chunk.text)
-            embedding_id = f"{chunk.chunk_id}_emb"
+            try:
+                embedding = await generate_embedding(chunk.text)
+                
+                # Debug - verify embedding dimension
+                if len(embedding) != 1536:
+                    print(f"Warning: Embedding dimension mismatch. Got {len(embedding)}, expected 1536.")
+                    # Force correct dimensions by padding or truncating if needed
+                    if len(embedding) < 1536:
+                        # Pad with zeros if too short (shouldn't happen with Gemini)
+                        embedding = embedding + [0.0] * (1536 - len(embedding))
+                    else:
+                        # Truncate if too long 
+                        embedding = embedding[:1536]
+                        
+                embedding_id = f"{chunk.chunk_id}_emb"
+                
+                # Use a more deterministic ID to avoid collisions and enable updates
+                point_id = abs(hash(f"{doc_id}_{chunk.chunk_id}")) % (2**31 - 1)
+                
+                qdrant_client.upsert(
+                    collection_name="documents",
+                    points=[
+                        models.PointStruct(
+                            id=point_id,
+                            vector=embedding,
+                            payload={
+                                "doc_id": doc_id,
+                                "chunk_id": chunk.chunk_id,
+                                "page_num": chunk.page_num,
+                                "text": chunk.text,
+                                "filename": metadata.filename,
+                                "title": metadata.title
+                            }
+                        )
+                    ]
+                )
+                
+                embedding_ids.append(embedding_id)
+                chunk.embedding_id = embedding_id
+                
+            except Exception as chunk_error:
+                print(f"Error processing chunk {chunk.chunk_id}: {str(chunk_error)}")
+                # Continue with other chunks instead of failing the entire operation
+                continue
+                
+        if not embedding_ids:
+            raise ValueError("No chunks were successfully embedded and stored")
             
-            qdrant_client.upsert(
-                collection_name="documents",
-                points=[
-                    models.PointStruct(
-                        id=hash(embedding_id) % 100000000,
-                        vector=embedding,
-                        payload={
-                            "doc_id": doc_id,
-                            "chunk_id": chunk.chunk_id,
-                            "page_num": chunk.page_num,
-                            "text": chunk.text,
-                            "filename": metadata.filename,
-                            "title": metadata.title
-                        }
-                    )
-                ]
-            )
-            
-            embedding_ids.append(embedding_id)
-            chunk.embedding_id = embedding_id
         return embedding_ids
     except Exception as e:
+        print(f"Vector database storage error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error storing in vector database: {str(e)}")
 
 async def analyze_document(doc_text: str, metadata: DocumentMetadata) -> DocumentAnalysis:
@@ -159,19 +185,104 @@ async def analyze_document(doc_text: str, metadata: DocumentMetadata) -> Documen
         
         analysis_text = await analyze_with_gemini(analysis_prompt)
         
-        # In production, parse JSON response properly
-        # For simplicity, return mock analysis
-        return DocumentAnalysis(
-            doc_id=metadata.doc_id,
-            summary="This is a summary of the document based on its content.",
-            key_points=[
-                "Key point 1 about the document",
-                "Key point 2 about the document",
-                "Key point 3 about the document"
-            ],
-            topics=["Topic 1", "Topic 2", "Topic 3"],
-            sentiment="Neutral",
-            recommendations=["Recommendation 1", "Recommendation 2"]
-        )
+        # Try to parse JSON response
+        try:
+            import json
+            import re
+            
+            # Extract JSON if it's embedded in markdown or other text
+            json_match = re.search(r'```json\s*(.*?)\s*```|```\s*(.*?)\s*```|({.*})', analysis_text, re.DOTALL)
+            if json_match:
+                json_str = json_match.group(1) or json_match.group(2) or json_match.group(3)
+                analysis_data = json.loads(json_str)
+            else:
+                # If no JSON formatting found, attempt to parse the entire response
+                analysis_data = json.loads(analysis_text)
+                
+            return DocumentAnalysis(
+                doc_id=metadata.doc_id,
+                summary=analysis_data.get("summary", "No summary available."),
+                key_points=analysis_data.get("key_points", ["No key points available."]),
+                topics=analysis_data.get("topics", ["No topics available."]),
+                sentiment=analysis_data.get("sentiment", "Neutral"),
+                recommendations=analysis_data.get("recommendations", ["No recommendations available."])
+            )
+            
+        except (json.JSONDecodeError, AttributeError, KeyError) as json_err:
+            # Fallback to a more robust approach if JSON parsing fails
+            print(f"JSON parsing error: {str(json_err)}. Using fallback extraction method.")
+            
+            # Simple text extraction approach
+            summary = extract_section(analysis_text, ["summary", "overview"], 200)
+            key_points = extract_list_items(analysis_text, ["key points", "main points", "important points"])
+            topics = extract_list_items(analysis_text, ["topics", "themes", "subject"])
+            sentiment = extract_section(analysis_text, ["sentiment", "tone"], 20)
+            recommendations = extract_list_items(analysis_text, ["recommendations", "next steps", "actions"])
+            
+            return DocumentAnalysis(
+                doc_id=metadata.doc_id,
+                summary=summary or "This document contains information that could not be fully analyzed.",
+                key_points=key_points[:7] if key_points else ["The document requires manual review."],
+                topics=topics[:5] if topics else ["General content"],
+                sentiment=sentiment or "Neutral",
+                recommendations=recommendations[:5] if recommendations else ["Review the document manually."]
+            )
+            
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error analyzing document: {str(e)}")
+
+def extract_section(text: str, keywords: List[str], max_length: int = 100) -> str:
+    """Extract a section from text based on keywords."""
+    lower_text = text.lower()
+    for keyword in keywords:
+        if keyword.lower() in lower_text:
+            start_idx = lower_text.find(keyword.lower())
+            section_start = text.find(":", start_idx)
+            if section_start != -1:
+                section_text = text[section_start + 1:].strip()
+                end_markers = ["\n\n", "\n#", "\n*"]
+                for marker in end_markers:
+                    if marker in section_text:
+                        section_text = section_text.split(marker)[0].strip()
+                return section_text[:max_length].strip()
+    return ""
+
+def extract_list_items(text: str, keywords: List[str]) -> List[str]:
+    """Extract list items following certain keywords."""
+    items = []
+    lower_text = text.lower()
+    
+    for keyword in keywords:
+        if keyword.lower() in lower_text:
+            start_idx = lower_text.find(keyword.lower())
+            section_start = text.find(":", start_idx)
+            if section_start != -1:
+                section_text = text[section_start + 1:].strip()
+                
+                # Try to find list items with different markers
+                patterns = [
+                    r'\n\s*[-•*]\s*(.*?)(?=\n\s*[-•*]|\n\n|$)',  # Bullet points
+                    r'\n\s*(\d+)[.):]\s*(.*?)(?=\n\s*\d+[.):]|\n\n|$)',  # Numbered items
+                ]
+                
+                for pattern in patterns:
+                    matches = re.findall(pattern, "\n" + section_text, re.DOTALL)
+                    if matches:
+                        # Handle different match group structures
+                        if isinstance(matches[0], tuple):
+                            new_items = [m[-1].strip() for m in matches if m[-1].strip()]
+                        else:
+                            new_items = [m.strip() for m in matches if m.strip()]
+                        items.extend(new_items)
+                        break
+                
+                # If no structured list found, try splitting by newlines
+                if not items:
+                    potential_items = section_text.split("\n")
+                    items = [item.strip().lstrip('-•*').strip() for item in potential_items if item.strip()]
+                    
+                # If we found items, no need to check other keywords
+                if items:
+                    break
+    
+    return [item for item in items if len(item) > 5]  # Filter out very short items
