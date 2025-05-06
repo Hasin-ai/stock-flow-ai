@@ -74,5 +74,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = 
         data={"sub": user.email, "role": user.role.value, "approval_status": user.approval_status.value, "user_id": user.id},
         expires_delta=timedelta(seconds=3600)
     )
-    
-    return {"access_token": access_token, "token_type": "bearer", "user_id": user.id}
+
+    # print(f"User {user.email} logged in successfully. Role: {user.role}, Approval Status: {user.approval_status}")
+
+    return {"access_token": access_token, "token_type": "bearer", "user_id": user.id, "role": user.role.value}
