@@ -56,9 +56,20 @@ async def search_vector_db(query: str, collection: str, doc_id: str = None, limi
         embedding_response = genai.embed_content(
             model="models/embedding-001",
             content=query,
-            task_type="RETRIEVAL_QUERY"  # Use RETRIEVAL_QUERY for queries - matches with RETRIEVAL_DOCUMENT
+            task_type="RETRIEVAL_DOCUMENT"  # Changed from RETRIEVAL_QUERY to RETRIEVAL_DOCUMENT for consistency
         )
         embedding = embedding_response['embedding']
+        
+        # Verify embedding dimension and fix if needed
+        if len(embedding) != 1536 and collection == "documents":
+            print(f"Warning: Embedding dimension mismatch. Got {len(embedding)}, expected 1536.")
+            # Force correct dimensions by padding or truncating
+            if len(embedding) < 1536:
+                # Pad with zeros if too short
+                embedding = embedding + [0.0] * (1536 - len(embedding))
+            else:
+                # Truncate if too long
+                embedding = embedding[:1536]
         
         # Create filter if doc_id is provided
         search_filter = None
