@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Flow AI - Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+        }
+        .sidebar {
+            min-height: 100vh;
+            background-color: #212529;
+            color: white;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+        }
+        .sidebar .nav-link:hover {
+            color: rgba(255, 255, 255, 1);
+        }
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar .nav-link i {
+            margin-right: 0.5rem;
+        }
+        .main-content {
+            padding: 2rem;
+        }
+        .dashboard-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .dashboard-card h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #0d6efd;
+        }
+        .client-row, .registration-row, .trade-row {
+            background-color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar p-0">
+                <div class="d-flex flex-column h-100">
+                    <div class="p-3 text-center">
+                        <h3>Stock Flow AI</h3>
+                        <p class="mb-0">Admin Panel</p>
+                    </div>
+                    <hr class="text-white mt-0">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="clients.html">
+                                <i class="bi bi-people"></i> Clients
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="client-registrations.html">
+                                <i class="bi bi-person-plus"></i> Registration Requests
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="trade-requests.html">
+                                <i class="bi bi-arrow-left-right"></i> Trade Requests
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="chat-nav-link">
+                                <i class="bi bi-chat-dots"></i> Chat <span id="unread-badge" class="badge bg-danger ms-2 d-none">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="client-activity.html">
+                                <i class="bi bi-activity"></i> Activity Logs
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="mt-auto p-3">
+                        <button id="logout-btn" class="btn btn-outline-light w-100">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Main Content -->
+            <div class="col-md-10 main-content">
+                <h2 class="mb-4">Admin Dashboard</h2>
+                
+                <!-- Client List -->
+                <div class="dashboard-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3><i class="bi bi-people me-2"></i> Clients</h3>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary me-2" id="add-client-btn">
+                                <i class="bi bi-plus"></i> Add Client
+                            </button>
+                            <a href="clients.html" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-arrow-right"></i> View All
+                            </a>
+                        </div>
+                    </div>
+                    <div id="clients-container">
+                        <!-- Client rows will be added here dynamically -->
+                        <div class="text-center my-3" id="clients-loading">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pending Registrations -->
+                <div class="dashboard-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3><i class="bi bi-person-plus me-2"></i> Pending Client Registrations</h3>
+                        <a href="client-registrations.html" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-arrow-right"></i> View All
+                        </a>
+                    </div>
+                    <div id="registrations-container">
+                        <!-- Registration rows will be added here dynamically -->
+                        <div class="text-center my-3" id="registrations-loading">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Trade Requests -->
+                <div class="dashboard-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3><i class="bi bi-arrow-left-right me-2"></i> Pending Trade Requests</h3>
+                        <a href="trade-requests.html" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-arrow-right"></i> View All
+                        </a>
+                    </div>
+                    <div id="trade-requests-container">
+                        <!-- Trade request rows will be added here dynamically -->
+                        <div class="text-center my-3" id="trades-loading">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Chat Interface - Hidden by default -->
+                <div id="chat-section" class="dashboard-card d-none">
+                    <h3><i class="bi bi-chat-dots me-2"></i> Client Messages</h3>
+                    <div class="row">
+                        <!-- Client List -->
+                        <div class="col-md-3">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">Clients</h5>
+                                </div>
+                                <div class="card-body p-0">
+                                    <ul class="list-group list-group-flush" id="chat-users-list">
+                                        <!-- Client list will be dynamically populated -->
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Chat Area -->
+                        <div class="col-md-9">
+                            <div class="card">
+                                <div class="card-header bg-light">
+                                    <h5 class="card-title mb-0" id="chat-with">Select a client to start chatting</h5>
+                                </div>
+                                <div class="card-body" style="height: 400px; overflow-y: auto;" id="chat-messages">
+                                    <div class="text-center text-muted my-5">
+                                        <i class="bi bi-chat-square-dots fs-1"></i>
+                                        <p>Select a client from the list to view your conversation.</p>
+                                    </div>
+                                </div>
+                                <div class="card-footer">
+                                    <form id="chat-form" class="d-none">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="chat-input" placeholder="Type your message...">
+                                            <button class="btn btn-primary" type="submit">
+                                                <i class="bi bi-send"></i>
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Client Activity -->
+                <div class="dashboard-card">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3><i class="bi bi-activity me-2"></i> Recent Client Activity</h3>
+                        <a href="client-activity.html" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-arrow-right"></i> View All
+                        </a>
+                    </div>
+                    <div id="activity-container">
+                        <div class="text-center my-3" id="activity-loading">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <table class="table table-hover d-none" id="activity-table">
+                            <thead>
+                                <tr>
+                                    <th>Client ID</th>
+                                    <th>Action</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activity-tbody">
+                                <!-- Activity logs will be added here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Add Client Modal -->
+    <div class="modal fade" id="addClientModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add New Client</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="add-client-form">
+                        <div class="mb-3">
+                            <label for="client-username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="client-username" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="client-email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="client-email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="client-password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="client-password" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save-client-btn">Create Client</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // API Base URL - update to match the backend router configuration
+        const API_BASE_URL = 'http://localhost:8000/api';
+        const WS_BASE_URL = 'ws://localhost:8000';
+        
+        // Store authentication token
+        let authToken = localStorage.getItem('token');
+        let userId = localStorage.getItem('user_id');
+        
+        // Chat message formatting
+        function formatChatMessage(message, isSelf) {
+            const date = new Date(message.timestamp);
+            const formattedTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            return `
+                <div class="chat-message mb-3 ${isSelf ? 'text-end' : ''}">
+                    <div class="d-inline-block p-2 rounded ${isSelf ? 'bg-primary text-white' : 'bg-light'}" style="max-width: 75%;">
+                        <div>${message.content}</div>
+                        <small class="text-${isSelf ? 'light' : 'muted'}">${formattedTime}</small>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Format date to readable format
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString();
+        }
+        
+        // Add chat CSS styles
+        const style = document.createElement('style');
+        style.textContent = `
+            .client-list-item {
+                cursor: pointer;
+                position: relative;
+            }
+            .client-list-item:hover {
+                background-color: #f8f9fa;
+            }
+            .client-list-item.active {
+                background-color: #e9ecef;
+            }
+            .badge-unread {
+                position: absolute;
+                top: 8px;
+                right: 8px;
+            }
+            .chat-separator {
+                display: flex;
+                align-items: center;
+                text-align: center;
+                margin: 15px 0;
+            }
+            .chat-separator::before, .chat-separator::after {
+                content: '';
+                flex: 1;
+                border-bottom: 1px solid #dee2e6;
+            }
+            .chat-separator::before {
+                margin-right: .5em;
+            }
+            .chat-separator::after {
+                margin-left: .5em;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Helper function for API calls
+        async function fetchAPI(endpoint, options = {}) {
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`
+                }
+            };
+            
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                ...defaultOptions,
+                ...options
+            });
+            
+            if (!response.ok) {
+                if (response.status === 401) {
+                    // Token expired or invalid
+                    localStorage.removeItem('token');
+                    window.location.href = 'login.html';
+                    return null;
+                }
+                console.error(`API Error: ${response.status}`, await response.text());
+                throw new Error(`API Error: ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+        
+        // Check for authentication
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!authToken) {
+                // For testing purposes, let's not redirect to login yet
+                // window.location.href = 'login.html';
+                // return;
+                console.log('No authentication token found, but proceeding for testing');
+            }
+            
+            // Load all dashboard data
+            loadClients();
+            loadPendingRegistrations();
+            loadTradeRequests();
+            loadActivityLogs();
+            
+            // Check for unread chat messages at startup
+            checkUnreadMessages();
+            
+            // Chat functionality
+            const chatNavLink = document.getElementById('chat-nav-link');
+            const dashboardCards = document.querySelectorAll('.dashboard-card');
+            const chatSection = document.getElementById('chat-section');
+            const chatUsersList = document.getElementById('chat-users-list');
+            const chatMessages = document.getElementById('chat-messages');
+            const chatWith = document.getElementById('chat-with');
+            const chatForm = document.getElementById('chat-form');
+            const chatInput = document.getElementById('chat-input');
+            const unreadBadge = document.getElementById('unread-badge');
+            
+            // Keep track of current active chat
+            let currentChatUserId = null;
+            let currentChatUsername = null;
+            let socket = null;
+            let userUnreadCounts = {};
+            
+            // Chat navigation
+            chatNavLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                openChatInterface();
+            });
+            
+            // Function to open chat interface
+            function openChatInterface() {
+                // Hide all other dashboard cards and show chat section
+                dashboardCards.forEach(card => {
+                    if (card !== chatSection) {
+                        card.classList.add('d-none');
+                    }
+                });
+                chatSection.classList.remove('d-none');
+                
+                // Update active nav link
+                document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                chatNavLink.classList.add('active');
+                
+                // Initialize chat if not already done
+                loadChatUsers();
+                if (!socket) {
+                    connectWebSocket();
+                }
+            }
+
+            // Test API connection to debug endpoint
+            async function testApiConnection() {
+                try {
+                    const response = await fetchAPI('/ws/debug/token');
+                    console.log('API connection test:', response);
+                    return true;
+                } catch (error) {
+                    console.error('API connection test failed:', error);
+                    return false;
+                }
+            }
+            
+            // Connect to WebSocket
+            function connectWebSocket() {
+                // For demo, we'll use a mock token if none exists
+                const token = authToken || 'mock_admin_token';
+                
+                // Test API first
+                testApiConnection().then(success => {
+                    if (!success) {
+                        console.error('API test failed, WebSocket might not work');
+                    }
+                    
+                    // Close existing socket if any
+                    if (socket) {
+                        socket.close();
+                    }
+                    
+                    console.log(`Connecting to WebSocket at: ${WS_BASE_URL}/ws/chat?token=${token.substring(0, 10)}...`);
+                    socket = new WebSocket(`${WS_BASE_URL}/ws/chat?token=${token}`);
+                    
+                    socket.onopen = function(e) {
+                        console.log('WebSocket connection established');
+                    };
+                    
+                    socket.onmessage = function(event) {
+                        const data = JSON.parse(event.data);
+                        console.log('WebSocket message received:', data);
+                        
+                        if (data.error) {
+                            console.error('WebSocket error message:', data.error, data.details);
+                            return;
+                        }
+                        
+                        if (data.connection_status === 'established') {
+                            console.log('Connection debug info:', data);
+                            return;
+                        }
+                        
+                        if (data.type === 'chat') {
+                            // Handle new chat message
+                            if (data.sender_id === currentChatUserId) {
+                                // If we're currently chatting with this user, show the message
+                                addMessageToChat(data, false);
+                                // Mark as read
+                                sendReadReceipt(data.sender_id);
+                            } else {
+                                // Otherwise, update unread count
+                                if (!userUnreadCounts[data.sender_id]) {
+                                    userUnreadCounts[data.sender_id] = 0;
+                                }
+                                userUnreadCounts[data.sender_id]++;
+                                
+                                // Update UI to show unread count
+                                updateUnreadBadges();
+                                
+                                // Show notification if possible
+                                showChatNotification(data);
+                            }
+                        } else if (data.type === 'read_receipt') {
+                            // Update UI if needed to show message was read
+                            console.log('Message read by:', data.reader_username);
+                        }
+                    };
+                    
+                    socket.onclose = function(event) {
+                        console.log('WebSocket connection closed:', event);
+                        // Attempt to reconnect after delay
+                        setTimeout(connectWebSocket, 5000);
+                    };
+                    
+                    socket.onerror = function(error) {
+                        console.error('WebSocket error:', error);
+                    };
+                });
+            }
+            
+            // Show notification for new chat messages
+            function showChatNotification(message) {
+                // Check if browser supports notifications
+                if (!("Notification" in window)) {
+                    return;
+                }
+                
+                // Request permission if needed
+                if (Notification.permission === "granted") {
+                    const notification = new Notification("New message from client", {
+                        body: `${message.sender_username}: ${message.content.substring(0, 50)}${message.content.length > 50 ? "..." : ""}`,
+                        icon: "/favicon.ico"
+                    });
+                    
+                    notification.onclick = function() {
+                        window.focus();
+                        openChatInterface();
+                        loadChatHistory(message.sender_id, message.sender_username);
+                    };
+                } else if (Notification.permission !== "denied") {
+                    Notification.requestPermission().then(function (permission) {
+                        if (permission === "granted") {
+                            showChatNotification(message);
+                        }
+                    });
+                }
+            }
+            
+            // Send a message
+            function sendMessage(content) {
+                if (!socket || socket.readyState !== WebSocket.OPEN || !currentChatUserId) {
+                    alert('Chat connection not available');
+                    return;
+                }
+                
+                const message = {
+                    type: 'chat',
+                    receiver_id: currentChatUserId,
+                    content: content
+                };
+                
+                socket.send(JSON.stringify(message));
+                
+                // Optimistically add message to chat
+                const selfMessage = {
+                    id: Date.now(), // Temporary ID
+                    sender_id: 'self', // Will be replaced by actual ID from server
+                    content: content,
+                    timestamp: new Date().toISOString(),
+                    is_read: 0
+                };
+                addMessageToChat(selfMessage, true);
+            }
+            
+            // Mark messages as read
+            function sendReadReceipt(senderId) {
+                // Via WebSocket
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    const message = {
+                        type: 'read',
+                        sender_id: senderId
+                    };
+                    
+                    socket.send(JSON.stringify(message));
+                }
+                
+                // Also via REST API to ensure it's recorded
+                fetchAPI(`/ws/chat/read/${senderId}`, {
+                    method: 'PUT'
+                }).catch(error => {
+                    console.error('Error marking messages as read:', error);
+                });
+                
+                // Reset unread count for this user
+                userUnreadCounts[senderId] = 0;
+                updateUnreadBadges();
+            }
+            
+            // Add message to chat UI
+            function addMessageToChat(message, isSelf) {
+                const messageHtml = formatChatMessage(message, isSelf);
+                chatMessages.insertAdjacentHTML('beforeend', messageHtml);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Update unread badges
+            function updateUnreadBadges() {
+                // Update global unread badge
+                const totalUnread = Object.values(userUnreadCounts).reduce((sum, count) => sum + count, 0);
+                if (totalUnread > 0) {
+                    unreadBadge.textContent = totalUnread;
+                    unreadBadge.classList.remove('d-none');
+                } else {
+                    unreadBadge.classList.add('d-none');
+                }
+                
+                // Update individual user badges
+                document.querySelectorAll('.client-list-item').forEach(item => {
+                    const userId = item.getAttribute('data-id');
+                    const badgeEl = item.querySelector('.badge-unread');
+                    
+                    if (badgeEl) {
+                        const unreadCount = userUnreadCounts[userId] || 0;
+                        if (unreadCount > 0) {
+                            badgeEl.textContent = unreadCount;
+                            badgeEl.classList.remove('d-none');
+                        } else {
+                            badgeEl.classList.add('d-none');
+                        }
+                    }
+                });
+            }
+            
+            // Check for unread messages
+            async function checkUnreadMessages() {
+                try {
+                    const response = await fetchAPI('/ws/chat/unread/count');
+                    if (response && response.unread_count > 0) {
+                        userUnreadCounts = {}; // Reset counts
+                        
+                        // Get detailed unread messages
+                        const unreadDetail = await fetchAPI('/ws/chat/unread');
+                        
+                        // Set counts by sender
+                        unreadDetail.unread_by_sender.forEach(sender => {
+                            userUnreadCounts[sender.sender_id] = sender.count;
+                        });
+                        
+                        updateUnreadBadges();
+                    }
+                } catch (error) {
+                    console.error('Error checking unread messages:', error);
+                }
+            }
+            
+            // Load chat users (clients)
+            async function loadChatUsers() {
+                try {
+                    // First check API connectivity
+                    await testApiConnection();
+                    
+                    const partners = await fetchAPI('/ws/chat/partners');
+                    console.log('Chat partners loaded:', partners);
+                    
+                    // Clear the list
+                    chatUsersList.innerHTML = '';
+                    
+                    if (partners.length === 0) {
+                        chatUsersList.innerHTML = '<li class="list-group-item text-center">No clients available</li>';
+                        return;
+                    }
+                    
+                    // Add each client to the list
+                    partners.forEach(partner => {
+                        const listItem = document.createElement('li');
+                        listItem.className = 'list-group-item client-list-item';
+                        listItem.setAttribute('data-id', partner.id);
+                        listItem.innerHTML = `
+                            <div class="d-flex align-items-center py-1">
+                                <div class="me-2">
+                                    <i class="bi bi-person-circle fs-5"></i>
+                                </div>
+                                <div>
+                                    ${partner.username}
+                                </div>
+                                <span class="badge bg-danger badge-unread rounded-pill d-none">0</span>
+                            </div>
+                        `;
+                        
+                        // Add click event to load chat history
+                        listItem.addEventListener('click', function() {
+                            loadChatHistory(partner.id, partner.username);
+                        });
+                        
+                        chatUsersList.appendChild(listItem);
+                    });
+                    
+                    // Initialize unread counts
+                    updateUnreadBadges();
+                    
+                } catch (error) {
+                    console.error('Error loading chat partners:', error);
+                    chatUsersList.innerHTML = '<li class="list-group-item text-danger">Error loading chat partners</li>';
+                }
+            }
+            
+            // Load chat history with a client
+            async function loadChatHistory(userId, username) {
+                try {
+                    // Set current chat user
+                    currentChatUserId = userId;
+                    currentChatUsername = username;
+                    
+                    // Update UI
+                    chatWith.textContent = `Chat with ${username}`;
+                    chatForm.classList.remove('d-none');
+                    chatMessages.innerHTML = '<div class="text-center my-3"><small class="text-muted">Loading messages...</small></div>';
+                    
+                    // Update active user in the list
+                    document.querySelectorAll('.client-list-item').forEach(item => {
+                        item.classList.remove('active');
+                        if (item.getAttribute('data-id') == userId) {
+                            item.classList.add('active');
+                        }
+                    });
+                    
+                    const messages = await fetchAPI(`/ws/chat/history/${userId}`);
+                    
+                    // Clear existing messages
+                    chatMessages.innerHTML = '';
+                    
+                    if (messages.length === 0) {
+                        chatMessages.innerHTML = `
+                            <div class="text-center my-5">
+                                <i class="bi bi-chat-square-dots fs-1 text-muted"></i>
+                                <p class="text-muted">No messages yet with this client.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    // Add date separator for first message
+                    if (messages.length > 0) {
+                        const firstDate = new Date(messages[0].timestamp);
+                        const dateStr = firstDate.toLocaleDateString();
+                        chatMessages.innerHTML = `<div class="chat-separator"><span class="mx-2 text-muted small">${dateStr}</span></div>`;
+                    }
+                    
+                    // Display messages
+                    let currentDate = '';
+                    messages.forEach(message => {
+                        // Check if we need a date separator
+                        const messageDate = new Date(message.timestamp);
+                        const dateStr = messageDate.toLocaleDateString();
+                        
+                        if (dateStr !== currentDate) {
+                            currentDate = dateStr;
+                            if (messages.indexOf(message) > 0) {
+                                chatMessages.insertAdjacentHTML('beforeend', 
+                                    `<div class="chat-separator"><span class="mx-2 text-muted small">${dateStr}</span></div>`
+                                );
+                            }
+                        }
+                        
+                        // Determine if this is our message (sent by admin)
+                        const isSelf = message.sender_id === 'admin' || message.sender_id == userId;
+                        addMessageToChat(message, isSelf);
+                    });
+                    
+                    // Mark all unread messages as read
+                    sendReadReceipt(userId);
+                    
+                    // Scroll to bottom
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    
+                } catch (error) {
+                    console.error('Error loading chat history:', error);
+                    chatMessages.innerHTML = '<div class="text-center my-3"><small class="text-danger">Error loading messages</small></div>';
+                }
+            }
+            
+            // Chat form submission
+            chatForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const message = chatInput.value.trim();
+                if (message) {
+                    sendMessage(message);
+                    chatInput.value = '';
+                }
+            });
+            
+            // Add client modal
+            const addClientBtn = document.getElementById('add-client-btn');
+            const addClientModal = new bootstrap.Modal(document.getElementById('addClientModal'));
+            
+            addClientBtn.addEventListener('click', function() {
+                addClientModal.show();
+            });
+            
+            // Logout functionality
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user_id');
+                window.location.href = 'login.html';
+            });
+            
+            // Save client form
+            document.getElementById('save-client-btn').addEventListener('click', async function() {
+                const username = document.getElementById('client-username').value;
+                const email = document.getElementById('client-email').value;
+                const password = document.getElementById('client-password').value;
+                
+                try {
+                    // Create new client via API
+                    const newClient = await fetchAPI('/admin/clients', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            username: username,
+                            email: email,
+                            password: password
+                        })
+                    });
+                    
+                    // Reload clients list
+                    loadClients();
+                    
+                    // Close modal and reset form
+                    addClientModal.hide();
+                    document.getElementById('add-client-form').reset();
+                    
+                } catch (error) {
+                    alert('Error creating client: ' + error.message);
+                }
+            });
+            
+            // Function to load clients
+            async function loadClients() {
+                const clientsContainer = document.getElementById('clients-container');
+                const loadingIndicator = document.getElementById('clients-loading');
+                
+                try {
+                    const clients = await fetchAPI('/admin/clients');
+                    
+                    // Hide loading indicator and clear container
+                    loadingIndicator.style.display = 'none';
+                    clientsContainer.innerHTML = '';
+                    
+                    if (clients.length === 0) {
+                        clientsContainer.innerHTML = '<div class="text-center text-muted my-3">No clients found</div>';
+                        return;
+                    }
+                    
+                    // Only display the top 5 clients
+                    const displayClients = clients.slice(0, 5);
+                    
+                    // Add each client to the container
+                    displayClients.forEach(client => {
+                        const clientRow = document.createElement('div');
+                        clientRow.className = 'client-row d-flex justify-content-between align-items-center';
+                        clientRow.innerHTML = `
+                            <div>
+                                <strong>${client.username}</strong> (${client.email})
+                            </div>
+                            <button class="btn btn-sm btn-danger delete-client-btn" data-id="${client.id}">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                        `;
+                        
+                        // Add delete event listener
+                        clientRow.querySelector('.delete-client-btn').addEventListener('click', function() {
+                            deleteClient(client.id);
+                        });
+                        
+                        clientsContainer.appendChild(clientRow);
+                    });
+                    
+                    // // Add "View All" row if there are more than 5 clients
+                    // if (clients.length > 5) {
+                    //     const viewAllRow = document.createElement('div');
+                    //     viewAllRow.className = 'text-center mt-3';
+                    //     viewAllRow.innerHTML = `
+                    //         <a href="clients.html" class="btn btn-sm btn-link">
+                    //             View all ${clients.length} clients
+                    //         </a>
+                    //     `;
+                    //     clientsContainer.appendChild(viewAllRow);
+                    // }
+                    
+                } catch (error) {
+                    console.error('Error loading clients:', error);
+                    loadingIndicator.style.display = 'none';
+                    clientsContainer.innerHTML = '<div class="text-center text-danger my-3">Error loading clients</div>';
+                }
+            }
+            
+            // Function to delete client
+            async function deleteClient(clientId) {
+                if (confirm('Are you sure you want to delete this client?')) {
+                    try {
+                        await fetchAPI(`/admin/clients/${clientId}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        // Dynamically remove this client row from the UI
+                        const clientRow = document.querySelector(`.delete-client-btn[data-id="${clientId}"]`).closest('.client-row');
+                        if (clientRow) {
+                            clientRow.remove();
+                            
+                            // Check if there are any clients left, if not show empty message
+                            if (document.querySelectorAll('.client-row').length === 0) {
+                                document.getElementById('clients-container').innerHTML = 
+                                    '<div class="text-center text-muted my-3">No clients found</div>';
+                            }
+                        }
+                    } catch (error) {
+                        alert('Error deleting client: ' + error.message);
+                    }
+                }
+            }
+            
+            // Function to load pending registrations
+            async function loadPendingRegistrations() {
+                const registrationsContainer = document.getElementById('registrations-container');
+                const loadingIndicator = document.getElementById('registrations-loading');
+                
+                try {
+                    const registrations = await fetchAPI('/admin/pending-registrations');
+                    
+                    // Hide loading indicator and clear container
+                    loadingIndicator.style.display = 'none';
+                    registrationsContainer.innerHTML = '';
+                    
+                    if (registrations.length === 0) {
+                        registrationsContainer.innerHTML = '<div class="text-center text-muted my-3">No pending registrations</div>';
+                        return;
+                    }
+                    
+                    // Only display the top 5 pending registrations
+                    const displayRegistrations = registrations.slice(0, 5);
+                    
+                    // Add each registration to the container
+                    displayRegistrations.forEach(registration => {
+                        const registrationRow = document.createElement('div');
+                        registrationRow.className = 'registration-row d-flex justify-content-between align-items-center';
+                        registrationRow.innerHTML = `
+                            <div>
+                                <strong>${registration.username}</strong> (${registration.email})
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-success approve-registration-btn" data-id="${registration.id}">
+                                    <i class="bi bi-check-lg"></i> Approve
+                                </button>
+                                <button class="btn btn-sm btn-danger decline-registration-btn" data-id="${registration.id}">
+                                    <i class="bi bi-x-lg"></i> Decline
+                                </button>
+                            </div>
+                        `;
+                        
+                        // Add approve/decline event listeners
+                        registrationRow.querySelector('.approve-registration-btn').addEventListener('click', function() {
+                            approveRegistration(registration.id);
+                        });
+                        
+                        registrationRow.querySelector('.decline-registration-btn').addEventListener('click', function() {
+                            declineRegistration(registration.id);
+                        });
+                        
+                        registrationsContainer.appendChild(registrationRow);
+                    });
+                    
+                    // // Add "View All" row if there are more than 5 pending registrations
+                    // if (registrations.length > 5) {
+                    //     const viewAllRow = document.createElement('div');
+                    //     viewAllRow.className = 'text-center mt-3';
+                    //     viewAllRow.innerHTML = `
+                    //         <a href="client-registrations.html" class="btn btn-sm btn-link">
+                    //             View all ${registrations.length} pending registrations
+                    //         </a>
+                    //     `;
+                    //     registrationsContainer.appendChild(viewAllRow);
+                    // }
+                    
+                } catch (error) {
+                    console.error('Error loading pending registrations:', error);
+                    loadingIndicator.style.display = 'none';
+                    registrationsContainer.innerHTML = '<div class="text-center text-danger my-3">Error loading pending registrations</div>';
+                }
+            }
+            
+            // Function to approve registration
+            async function approveRegistration(userId) {
+                try {
+                    await fetchAPI(`/admin/approve-client/${userId}`, {
+                        method: 'POST'
+                    });
+                    
+                    // Dynamically remove this registration from the UI
+                    const registrationRow = document.querySelector(`.approve-registration-btn[data-id="${userId}"]`).closest('.registration-row');
+                    if (registrationRow) {
+                        registrationRow.remove();
+                        
+                        // Check if there are any pending registrations left, if not show empty message
+                        if (document.querySelectorAll('.registration-row').length === 0) {
+                            document.getElementById('registrations-container').innerHTML = 
+                                '<div class="text-center text-muted my-3">No pending registrations</div>';
+                        }
+                    }
+                    
+                    // Reload client list to include newly approved client
+                    loadClients();
+                    
+                    // Show a success message
+                    const alertEl = document.createElement('div');
+                    alertEl.className = 'alert alert-success alert-dismissible fade show mt-3';
+                    alertEl.innerHTML = `
+                        Client registration approved successfully!
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    `;
+                    document.getElementById('registrations-container').prepend(alertEl);
+                    
+                    // Auto-dismiss the alert after 3 seconds
+                    setTimeout(() => {
+                        const bsAlert = new bootstrap.Alert(alertEl);
+                        bsAlert.close();
+                    }, 3000);
+                    
+                } catch (error) {
+                    alert('Error approving registration: ' + error.message);
+                }
+            }
+            
+            // Function to decline registration
+            async function declineRegistration(userId) {
+                if (confirm('Are you sure you want to decline this registration?')) {
+                    try {
+                        await fetchAPI(`/admin/reject-client/${userId}`, {
+                            method: 'POST'
+                        });
+                        
+                        // Dynamically remove this registration from the UI
+                        const registrationRow = document.querySelector(`.decline-registration-btn[data-id="${userId}"]`).closest('.registration-row');
+                        if (registrationRow) {
+                            registrationRow.remove();
+                            
+                            // Check if there are any pending registrations left, if not show empty message
+                            if (document.querySelectorAll('.registration-row').length === 0) {
+                                document.getElementById('registrations-container').innerHTML = 
+                                    '<div class="text-center text-muted my-3">No pending registrations</div>';
+                            }
+                        }
+                        
+                        // Show a success message
+                        const alertEl = document.createElement('div');
+                        alertEl.className = 'alert alert-warning alert-dismissible fade show mt-3';
+                        alertEl.innerHTML = `
+                            Client registration declined.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        `;
+                        document.getElementById('registrations-container').prepend(alertEl);
+                        
+                        // Auto-dismiss the alert after 3 seconds
+                        setTimeout(() => {
+                            const bsAlert = new bootstrap.Alert(alertEl);
+                            bsAlert.close();
+                        }, 3000);
+                        
+                    } catch (error) {
+                        alert('Error declining registration: ' + error.message);
+                    }
+                }
+            }
+            
+            // Function to load trade requests
+            async function loadTradeRequests() {
+                const tradeRequestsContainer = document.getElementById('trade-requests-container');
+                const loadingIndicator = document.getElementById('trades-loading');
+                
+                try {
+                    const tradeRequests = await fetchAPI('/admin/trade-requests');
+                    
+                    // Hide loading indicator and clear container
+                    loadingIndicator.style.display = 'none';
+                    tradeRequestsContainer.innerHTML = '';
+                    
+                    if (tradeRequests.length === 0) {
+                        tradeRequestsContainer.innerHTML = '<div class="text-center text-muted my-3">No pending trade requests</div>';
+                        return;
+                    }
+                    
+                    // Filter for pending trades only
+                    const pendingTrades = tradeRequests.filter(trade => trade.status === "pending");
+                    
+                    if (pendingTrades.length === 0) {
+                        tradeRequestsContainer.innerHTML = '<div class="text-center text-muted my-3">No pending trade requests</div>';
+                        return;
+                    }
+                    
+                    // Only display the top 5 pending trades
+                    const displayTrades = pendingTrades.slice(0, 5);
+                    
+                    // Add each trade request to the container
+                    displayTrades.forEach(trade => {
+                        const tradeRow = document.createElement('div');
+                        tradeRow.className = 'trade-row d-flex justify-content-between align-items-center';
+                        tradeRow.innerHTML = `
+                            <div>
+                                <span class="badge ${trade.trade_type === 'buy' ? 'bg-primary' : 'bg-danger'} me-2">${trade.trade_type.toUpperCase()}</span>
+                                <strong>${trade.symbol}</strong> - ${trade.quantity} shares @ $${trade.price.toFixed(2)}
+                                <small class="text-muted d-block">Requested by: User ID ${trade.user_id} (${formatDate(trade.request_date)})</small>
+                            </div>
+                            <div>
+                                <button class="btn btn-sm btn-success approve-trade-btn" data-id="${trade.id}">
+                                    <i class="bi bi-check-lg"></i> Approve
+                                </button>
+                                <button class="btn btn-sm btn-danger decline-trade-btn" data-id="${trade.id}">
+                                    <i class="bi bi-x-lg"></i> Decline
+                                </button>
+                            </div>
+                        `;
+                        
+                        // Add approve/decline event listeners
+                        tradeRow.querySelector('.approve-trade-btn').addEventListener('click', function() {
+                            updateTradeStatus(trade.id, "approved");
+                        });
+                        
+                        tradeRow.querySelector('.decline-trade-btn').addEventListener('click', function() {
+                            updateTradeStatus(trade.id, "declined");
+                        });
+                        
+                        tradeRequestsContainer.appendChild(tradeRow);
+                    });
+                    
+                    // // Add "View All" row if there are more than 5 pending trades
+                    // if (pendingTrades.length > 5) {
+                    //     const viewAllRow = document.createElement('div');
+                    //     viewAllRow.className = 'text-center mt-3';
+                    //     viewAllRow.innerHTML = `
+                    //         <a href="trade-requests.html" class="btn btn-sm btn-link">
+                    //             View all ${pendingTrades.length} pending trade requests
+                    //         </a>
+                    //     `;
+                    //     tradeRequestsContainer.appendChild(viewAllRow);
+                    // }
+                    
+                } catch (error) {
+                    console.error('Error loading trade requests:', error);
+                    loadingIndicator.style.display = 'none';
+                    tradeRequestsContainer.innerHTML = '<div class="text-center text-danger my-3">Error loading trade requests</div>';
+                }
+            }
+            
+            // Function to update trade status
+            async function updateTradeStatus(tradeId, status) {
+                const action = status === "approved" ? "approve" : "decline";
+                if (action === "decline" && !confirm(`Are you sure you want to ${action} this trade request?`)) {
+                    return;
+                }
+                
+                try {
+                    await fetchAPI(`/admin/trade-requests/${tradeId}/status?status=${status}`, {
+                        method: 'PUT'
+                    });
+                    
+                    // Dynamically remove this trade request from the UI
+                    const tradeRow = document.querySelector(`.approve-trade-btn[data-id="${tradeId}"]`).closest('.trade-row');
+                    if (tradeRow) {
+                        tradeRow.remove();
+                        
+                        // Check if there are any pending trade requests left, if not show empty message
+                        if (document.querySelectorAll('.trade-row').length === 0) {
+                            document.getElementById('trade-requests-container').innerHTML = 
+                                '<div class="text-center text-muted my-3">No pending trade requests</div>';
+                        }
+                    }
+                    
+                    // Show a success message
+                    const alertEl = document.createElement('div');
+                    alertEl.className = `alert alert-${status === "approved" ? "success" : "warning"} alert-dismissible fade show mt-3`;
+                    alertEl.innerHTML = `
+                        Trade request ${status === "approved" ? "approved" : "declined"} successfully!
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    `;
+                    document.getElementById('trade-requests-container').prepend(alertEl);
+                    
+                    // Auto-dismiss the alert after 3 seconds
+                    setTimeout(() => {
+                        const bsAlert = new bootstrap.Alert(alertEl);
+                        bsAlert.close();
+                    }, 3000);
+                    
+                    // Also update the activity log to reflect this change
+                    loadActivityLogs();
+                    
+                } catch (error) {
+                    alert(`Error ${action}ing trade request: ` + error.message);
+                }
+            }
+            
+            // Function to load activity logs
+            async function loadActivityLogs() {
+                const activityTable = document.getElementById('activity-table');
+                const activityTbody = document.getElementById('activity-tbody');
+                const loadingIndicator = document.getElementById('activity-loading');
+                
+                try {
+                    const activityLogs = await fetchAPI('/admin/activity-logs');
+                    
+                    // Hide loading indicator and show table
+                    loadingIndicator.style.display = 'none';
+                    activityTable.classList.remove('d-none');
+                    activityTbody.innerHTML = '';
+                    
+                    if (activityLogs.length === 0) {
+                        activityTbody.innerHTML = '<tr><td colspan="3" class="text-center">No activity logs found</td></tr>';
+                        return;
+                    }
+                    
+                    // Sort by timestamp descending (newest first)
+                    activityLogs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    
+                    // Only display the 5 most recent activity logs
+                    const recentLogs = activityLogs.slice(0, 5);
+                    
+                    // Add each activity log to the table
+                    recentLogs.forEach(log => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${log.user_id}</td>
+                            <td>${log.action}</td>
+                            <td>${formatDate(log.timestamp)}</td>
+                        `;
+                        activityTbody.appendChild(row);
+                    });
+                    
+                    // // Show "View All" button or message if there are more logs
+                    // if (activityLogs.length > 5) {
+                    //     const viewAllRow = document.createElement('tr');
+                    //     viewAllRow.className = 'table-light text-center';
+                    //     viewAllRow.innerHTML = `
+                    //         <td colspan="3">
+                    //             <a href="client-activity.html" class="btn btn-sm btn-link">
+                    //                 View all ${activityLogs.length} activity logs
+                    //             </a>
+                    //         </td>
+                    //     `;
+                    //     activityTbody.appendChild(viewAllRow);
+                    // }
+                    
+                } catch (error) {
+                    console.error('Error loading activity logs:', error);
+                    loadingIndicator.style.display = 'none';
+                    activityTable.classList.remove('d-none');
+                    activityTbody.innerHTML = '<tr><td colspan="3" class="text-center text-danger">Error loading activity logs</td></tr>';
+                }
+            }
+            
+            // Check for unread messages periodically
+            setInterval(checkUnreadMessages, 30000);
+        });
+    </script>
+</body>
+</html>

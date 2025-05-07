@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Analysis - StockFlow AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+        }
+        .sidebar {
+            min-height: 100vh;
+            background-color: #212529;
+            color: white;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+        }
+        .sidebar .nav-link:hover {
+            color: rgba(255, 255, 255, 1);
+        }
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar .nav-link i {
+            margin-right: 0.5rem;
+        }
+        .main-content {
+            padding: 2rem;
+        }
+        .chat-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 6rem);
+        }
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+        .chat-input {
+            border-top: 1px solid #e0e0e0;
+            padding: 1rem;
+        }
+        .message {
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .message-user {
+            align-items: flex-end;
+        }
+        .message-ai {
+            align-items: flex-start;
+        }
+        .message-content {
+            max-width: 80%;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+        }
+        .message-user .message-content {
+            background-color: #0d6efd;
+            color: white;
+        }
+        .message-ai .message-content {
+            background-color: #f0f0f0;
+            color: #212529;
+        }
+        .typing-indicator {
+            display: flex;
+            padding: 0.5rem 1rem;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            width: fit-content;
+            margin-bottom: 1.5rem;
+        }
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            background-color: #666;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 1px;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.3); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.6; }
+        }
+        .pdf-card {
+            background-color: rgba(0, 0, 0, 0.04);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+        }
+        .pdf-icon {
+            color: #dc3545;
+            font-size: 2rem;
+            margin-right: 15px;
+        }
+        .pdf-info {
+            flex-grow: 1;
+        }
+        .dropzone {
+            border: 2px dashed #0d6efd;
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .dropzone:hover, .dropzone.dragover {
+            background-color: rgba(13, 110, 253, 0.05);
+        }
+        .source-quote {
+            background-color: #f8f9fa;
+            border-left: 4px solid #0d6efd;
+            padding: 0.75rem;
+            margin: 1rem 0;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar p-0">
+                <div class="d-flex flex-column h-100">
+                    <div class="p-3 text-center">
+                        <h3>StockFlow AI</h3>
+                        <p class="mb-0">Client Portal</p>
+                    </div>
+                    <hr class="text-white mt-0">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="client-dashboard.html">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="stock-analysis.html">
+                                <i class="bi bi-graph-up"></i> Stock Analysis
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#">
+                                <i class="bi bi-file-earmark-text"></i> PDF Analysis
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="cart.html">
+                                <i class="bi bi-cart"></i> Cart
+                                <span class="badge bg-primary rounded-pill" id="cart-badge">3</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="mt-auto p-3">
+                        <button id="logout-btn" class="btn btn-outline-light w-100">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-10 main-content">
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        <!-- AI Welcome Message -->
+                        <div class="message message-ai">
+                            <div class="message-content">
+                                <p class="mb-0">Hello! I can help you analyze financial PDFs such as annual reports, financial statements, or research papers. Upload a PDF to get started.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- PDF Upload Section -->
+                        <div class="message message-ai" id="upload-section">
+                            <div class="dropzone" id="pdf-dropzone">
+                                <i class="bi bi-cloud-arrow-up" style="font-size: 3rem;"></i>
+                                <h4 class="mt-3">Drop your PDF here</h4>
+                                <p class="text-muted">or click to browse files</p>
+                                <input type="file" id="pdf-input" accept=".pdf" style="display: none;" />
+                                <button class="btn btn-primary mt-2" id="browse-btn">
+                                    <i class="bi bi-file-earmark-pdf"></i> Browse Files
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- This section will be shown after PDF upload -->
+                        <div class="message message-ai d-none" id="pdf-uploaded-section">
+                            <div class="message-content">
+                                <p>I've analyzed your PDF. Here's a summary:</p>
+                                <div class="pdf-card">
+                                    <div class="pdf-icon">
+                                        <i class="bi bi-file-earmark-pdf-fill"></i>
+                                    </div>
+                                    <div class="pdf-info">
+                                        <h5 class="mb-1" id="pdf-title">TSLA Q1 2025 Financial Report.pdf</h5>
+                                        <p class="mb-1"><small id="pdf-pages">24 pages</small></p>
+                                        <p class="mb-0 text-muted" id="pdf-summary">This document contains Tesla's Q1 2025 financial results, highlighting revenue growth of 12%, expansion in China, and details on upcoming vehicle launches.</p>
+                                    </div>
+                                </div>
+                                <p class="mt-3">You can now ask me questions about this document. For example:</p>
+                                <ul>
+                                    <li>What were the key financial results?</li>
+                                    <li>Explain the revenue breakdown by segment</li>
+                                    <li>What are the major risk factors mentioned?</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Example conversation after PDF upload -->
+                        <div class="message message-user d-none pdf-chat-example">
+                            <div class="message-content">
+                                <p class="mb-0">What are the key financial metrics highlighted in this report?</p>
+                            </div>
+                        </div>
+                        
+                        <div class="message message-ai d-none pdf-chat-example">
+                            <div class="message-content">
+                                <p>Based on the uploaded Q1 2025 financial report for Tesla, here are the key financial metrics highlighted:</p>
+                                
+                                <ol>
+                                    <li><strong>Revenue:</strong> $25.6 billion, representing a 12% year-over-year increase from Q1 2024 ($22.9 billion)</li>
+                                    <li><strong>Gross Margin:</strong> 23.1%, up from 19.3% in the previous quarter but down slightly from 23.5% year-over-year</li>
+                                    <li><strong>Operating Income:</strong> $2.89 billion, resulting in an operating margin of 11.3%</li>
+                                    <li><strong>Net Income (GAAP):</strong> $2.32 billion</li>
+                                    <li><strong>Adjusted EBITDA:</strong> $4.37 billion, with an EBITDA margin of 17.1%</li>
+                                    <li><strong>Free Cash Flow:</strong> $1.81 billion</li>
+                                    <li><strong>Cash and Cash Equivalents:</strong> $29.1 billion at quarter end</li>
+                                </ol>
+                                
+                                <p>The report specifically highlights the following from page 12:</p>
+                                
+                                <div class="source-quote">
+                                    "Operating expenses increased to $5.04 billion in Q1, primarily due to AI and robotics development costs. Despite these investments, we've maintained strong profitability metrics while positioning for future growth in autonomous driving and energy storage."
+                                </div>
+                                
+                                <p>The report also emphasizes the production achievements:</p>
+                                
+                                <ul>
+                                    <li>Total vehicle production: 494,989 units (Model Y/3: 461,544; Model S/X: 13,445; Cybertruck: 20,000)</li>
+                                    <li>Energy storage deployments: 4.11 GWh, an increase of 95% year-over-year</li>
+                                    <li>Supercharger stations: 5,849 globally, with 55,330 connectors (21% increase year-over-year)</li>
+                                </ul>
+                                
+                                <p>These metrics indicate Tesla's continued growth trajectory, particularly in energy storage and infrastructure expansion, despite competitive pressures in the EV market.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="message message-user d-none pdf-chat-example">
+                            <div class="message-content">
+                                <p class="mb-0">What does the report say about Tesla's future outlook?</p>
+                            </div>
+                        </div>
+                        
+                        <div class="message message-ai d-none pdf-chat-example">
+                            <div class="message-content">
+                                <p>According to the Q1 2025 financial report, Tesla outlines the following future outlook:</p>
+                                
+                                <p><strong>Production & Deliveries:</strong></p>
+                                <div class="source-quote">
+                                    "We are maintaining our target of approximately 20% volume growth in 2025 compared to 2024, with the introduction of new affordable models later this year. The production ramp of Cybertruck will continue throughout 2025, with expected production capacity of 225,000 units annually by year-end."
+                                </div>
+                                
+                                <p><strong>New Vehicle Development:</strong></p>
+                                <div class="source-quote">
+                                    "Our next-generation vehicle platform is progressing as planned with production targeted to commence in mid-2026. This platform will enable a new lineup of more affordable models and support our goal of accelerating the world's transition to sustainable energy."
+                                </div>
+                                
+                                <p><strong>Full Self-Driving (FSD):</strong></p>
+                                <div class="source-quote">
+                                    "FSD v12.5 is currently being tested internally with regulatory approval for supervised operation expected in key North American markets by Q3 2025. We anticipate European approval processes to conclude by early 2026."
+                                </div>
+                                
+                                <p><strong>Energy Business:</strong></p>
+                                <div class="source-quote">
+                                    "Energy generation and storage remains our fastest-growing segment with projected growth of more than 75% in 2025. Production capacity for Megapack at our dedicated factory will reach 40 GWh annually by Q4 2025, supporting utility-scale projects worldwide."
+                                </div>
+                                
+                                <p><strong>Financial Guidance:</strong></p>
+                                
+                                <ul>
+                                    <li>Capital expenditures for 2025 are expected to be $8-10 billion</li>
+                                    <li>Automotive gross margins are projected to remain between 21-23%</li>
+                                    <li>The company expects to maintain positive free cash flow throughout 2025</li>
+                                    <li>R&D expenses will increase significantly to support AI development, robotics, and next-generation vehicles</li>
+                                </ul>
+                                
+                                <p>The report also mentions potential challenges including:</p>
+                                
+                                <ul>
+                                    <li>Increased competition in the global EV market</li>
+                                    <li>Ongoing supply chain constraints for certain components</li>
+                                    <li>Regulatory uncertainty in key markets</li>
+                                    <li>Macroeconomic factors including interest rates and consumer spending</li>
+                                </ul>
+                                
+                                <p>Overall, Tesla presents an optimistic but measured outlook, balancing growth ambitions with acknowledgment of competitive and economic challenges.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chat-input">
+                        <form id="query-form" class="d-flex">
+                            <input type="text" id="query-input" class="form-control me-2" placeholder="Ask questions about the uploaded PDF..." disabled>
+                            <button type="submit" class="btn btn-primary" disabled>
+                                <i class="bi bi-send"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const API_BASE_URL = 'http://localhost:8000/api';
+            const uploadSection = document.getElementById('upload-section');
+            const pdfUploadedSection = document.getElementById('pdf-uploaded-section');
+            const pdfDropzone = document.getElementById('pdf-dropzone');
+            const pdfInput = document.getElementById('pdf-input');
+            const browseBtn = document.getElementById('browse-btn');
+            const queryForm = document.getElementById('query-form');
+            const queryInput = document.getElementById('query-input');
+            const chatMessages = document.getElementById('chat-messages');
+            
+            // Store the current document ID for queries
+            let currentDocId = null;
+            
+            // Check if user is logged in
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Update cart badge on load
+            updateCartBadge();
+            
+            // Event listeners for PDF upload
+            browseBtn.addEventListener('click', function() {
+                pdfInput.click();
+            });
+            
+            pdfInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    handleFileUpload(e.target.files[0]);
+                }
+            });
+            
+            pdfDropzone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.classList.add('dragover');
+            });
+            
+            pdfDropzone.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.classList.remove('dragover');
+            });
+            
+            pdfDropzone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.classList.remove('dragover');
+                
+                if (e.dataTransfer.files.length > 0) {
+                    handleFileUpload(e.dataTransfer.files[0]);
+                }
+            });
+            
+            // Handle PDF upload to backend API
+            async function handleFileUpload(file) {
+                if (file.type !== 'application/pdf') {
+                    alert('Please upload a PDF file.');
+                    return;
+                }
+                
+                // Show loading indicator
+                uploadSection.classList.add('d-none');
+                addTypingIndicator();
+                
+                try {
+                    // Create form data for upload
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    
+                    // Optional: add document name
+                    formData.append('document_name', file.name);
+                    
+                    // Upload to server
+                    const response = await fetch(`${API_BASE_URL}/pdf/upload`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || 'Failed to upload PDF');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Remove typing indicator
+                    document.querySelector('.typing-indicator').remove();
+                    
+                    // Update PDF info with actual data from response
+                    currentDocId = data.doc_id;
+                    document.getElementById('pdf-title').textContent = data.metadata.title || file.name;
+                    document.getElementById('pdf-pages').textContent = `${data.metadata.num_pages} pages`;
+                    document.getElementById('pdf-summary').textContent = data.analysis.summary;
+                    
+                    // Show PDF uploaded section
+                    pdfUploadedSection.classList.remove('d-none');
+                    
+                    // Display key points as a new message
+                    if (data.analysis.key_points && data.analysis.key_points.length > 0) {
+                        const keyPointsContent = `
+                            <p><strong>Key insights:</strong></p>
+                            <ul>
+                                ${data.analysis.key_points.map(point => `<li>${point}</li>`).join('')}
+                            </ul>
+                        `;
+                        
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = 'message message-ai';
+                        
+                        const contentDiv = document.createElement('div');
+                        contentDiv.className = 'message-content';
+                        contentDiv.innerHTML = keyPointsContent;
+                        
+                        messageDiv.appendChild(contentDiv);
+                        chatMessages.appendChild(messageDiv);
+                    }
+                    
+                    // Enable chat input
+                    queryInput.disabled = false;
+                    queryForm.querySelector('button').disabled = false;
+                    queryInput.placeholder = `Ask questions about ${data.metadata.title || file.name}...`;
+                    
+                    // Scroll to bottom
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                } catch (error) {
+                    console.error('Error uploading PDF:', error);
+                    
+                    // Remove typing indicator
+                    document.querySelector('.typing-indicator').remove();
+                    
+                    // Show error message
+                    addMessage('ai', `Sorry, I encountered an error uploading the PDF: ${error.message}`);
+                    
+                    // Show upload section again
+                    uploadSection.classList.remove('d-none');
+                }
+            }
+            
+            // Handle chat form submission
+            queryForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const query = queryInput.value.trim();
+                if (!query) return;
+                
+                // Add user message
+                addMessage('user', query);
+                
+                // Show typing indicator
+                addTypingIndicator();
+                
+                // Clear input
+                queryInput.value = '';
+                
+                try {
+                    // Call backend API for PDF querying
+                    const response = await fetch(`${API_BASE_URL}/pdf/query`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            query: query,
+                            doc_id: currentDocId,
+                            query_type: "specific" // Lowercase to match the enum value in the backend
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.detail || 'Failed to query PDF');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    // Remove typing indicator
+                    document.querySelector('.typing-indicator').remove();
+                    
+                    // Add AI response with the analysis
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = 'message message-ai';
+                    
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'message-content';
+                    
+                    // Format the response with proper HTML
+                    let formattedResponse = data.response;
+                    
+                    // Add source references if available
+                    if (data.source_chunks && data.source_chunks.length > 0) {
+                        // Find quotes in the response and format them as source quotes
+                        // This is a simple approach - in a real app, you might want to highlight exact matches
+                        formattedResponse = formattedResponse.replace(/"([^"]+)"/g, '<div class="source-quote">$1</div>');
+                    }
+                    
+                    contentDiv.innerHTML = `<p>${formattedResponse.replace(/\n\n/g, '</p><p>')}</p>`;
+                    
+                    messageDiv.appendChild(contentDiv);
+                    chatMessages.appendChild(messageDiv);
+                    
+                    // Scroll to bottom
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                } catch (error) {
+                    // Remove typing indicator
+                    document.querySelector('.typing-indicator').remove();
+                    
+                    // Show error message
+                    addMessage('ai', `Sorry, I encountered an error: ${error.message}`);
+                }
+            });
+            
+            // Update cart badge
+            async function updateCartBadge() {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/cart`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        return;
+                    }
+                    
+                    const cartData = await response.json();
+                    const cartBadge = document.getElementById('cart-badge');
+                    cartBadge.textContent = cartData.length || 0;
+                } catch (error) {
+                    console.error('Error getting cart count:', error);
+                }
+            }
+            
+            // Add message to chat
+            function addMessage(type, content) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message message-${type}`;
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.innerHTML = `<p class="mb-0">${content}</p>`;
+                
+                messageDiv.appendChild(contentDiv);
+                chatMessages.appendChild(messageDiv);
+                
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Add typing indicator
+            function addTypingIndicator() {
+                const indicatorDiv = document.createElement('div');
+                indicatorDiv.className = 'typing-indicator';
+                indicatorDiv.innerHTML = `
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                `;
+                chatMessages.appendChild(indicatorDiv);
+                
+                // Scroll to bottom
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+            
+            // Logout button functionality
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Flow AI - Client Activity</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+        }
+        .sidebar {
+            min-height: 100vh;
+            background-color: #212529;
+            color: white;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+        }
+        .sidebar .nav-link:hover {
+            color: rgba(255, 255, 255, 1);
+        }
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar .nav-link i {
+            margin-right: 0.5rem;
+        }
+        .main-content {
+            padding: 2rem;
+        }
+        .dashboard-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .activity-row:hover {
+            background-color: #f8f9fa;
+        }
+        .activity-type {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: white;
+        }
+        .type-stock-query {
+            background-color: #0d6efd;
+        }
+        .type-pdf-query {
+            background-color: #6610f2;
+        }
+        .type-cart {
+            background-color: #0dcaf0;
+        }
+        .type-trade {
+            background-color: #198754;
+        }
+        .type-login {
+            background-color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar p-0">
+                <div class="d-flex flex-column h-100">
+                    <div class="p-3 text-center">
+                        <h3>Stock Flow AI</h3>
+                        <p class="mb-0">Admin Panel</p>
+                    </div>
+                    <hr class="text-white mt-0">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="admin-dashboard.html">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="clients.html">
+                                <i class="bi bi-people"></i> Clients
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="client-registrations.html">
+                                <i class="bi bi-person-plus"></i> Registration Requests
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="trade-requests.html">
+                                <i class="bi bi-arrow-left-right"></i> Trade Requests
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="chat-nav-link">
+                                <i class="bi bi-chat-dots"></i> Chat <span id="unread-badge" class="badge bg-danger ms-2 d-none">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="client-activity.html">
+                                <i class="bi bi-activity"></i> Activity Logs
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="mt-auto p-3">
+                        <button id="logout-btn" class="btn btn-outline-light w-100">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-10 main-content">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="bi bi-activity me-2"></i> Client Activity Logs</h2>
+                    <div>
+                        <button class="btn btn-outline-secondary" id="export-btn">
+                            <i class="bi bi-download"></i> Export Data
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Filter & Search -->
+                <div class="dashboard-card mb-4">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" id="activity-search" placeholder="Search activities...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="client-filter">
+                                <option value="all">All Clients</option>
+                                <option value="1">John Doe</option>
+                                <option value="2">Jane Smith</option>
+                                <option value="3">Robert Johnson</option>
+                                <option value="4">Emily Wilson</option>
+                                <option value="5">Michael Brown</option>
+                                <option value="6">Sarah Thompson</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="activity-type-filter">
+                                <option value="all">All Activity Types</option>
+                                <option value="stock-query">Stock Queries</option>
+                                <option value="pdf-query">PDF Queries</option>
+                                <option value="cart">Cart Actions</option>
+                                <option value="trade">Trade Actions</option>
+                                <option value="login">Login/Logout</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="activity-sort">
+                                <option value="date_desc">Newest First</option>
+                                <option value="date_asc">Oldest First</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="input-group">
+                                <span class="input-group-text">Date Range</span>
+                                <input type="date" class="form-control" id="date-from" value="2025-05-01">
+                                <span class="input-group-text">to</span>
+                                <input type="date" class="form-control" id="date-to" value="2025-05-06">
+                                <button class="btn btn-outline-secondary" type="button" id="apply-date-filter">
+                                    Apply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Activity Table -->
+                <div class="dashboard-card">
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="activity-table">
+                            <thead>
+                                <tr>
+                                    <th>Client</th>
+                                    <th>Activity Type</th>
+                                    <th>Details</th>
+                                    <th>Timestamp</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Stock Query -->
+                                <tr class="activity-row" data-type="stock-query" data-client="1">
+                                    <td>John Doe</td>
+                                    <td><span class="activity-type type-stock-query">Stock Query</span></td>
+                                    <td>Overview of Google stocks</td>
+                                    <td>May 5, 2025 10:23 AM</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary view-details-btn" data-id="1">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- PDF Query -->
+                                <tr class="activity-row" data-type="pdf-query" data-client="2">
+                                    <td>Jane Smith</td>
+                                    <td><span class="activity-type type-pdf-query">PDF Query</span></td>
+                                    <td>What are the key financial metrics?</td>
+                                    <td>May 5, 2025 09:15 AM</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary view-details-btn" data-id="2">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Cart Action -->
+                                <tr class="activity-row" data-type="cart" data-client="3">
+                                    <td>Robert Johnson</td>
+                                    <td><span class="activity-type type-cart">Cart</span></td>
+                                    <td>Added GOOG to cart</td>
+                                    <td>May 5, 2025 08:42 AM</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary view-details-btn" data-id="3">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Trade Action -->
+                                <tr class="activity-row" data-type="trade" data-client="2">
+                                    <td>Jane Smith</td>
+                                    <td><span class="activity-type type-trade">Trade</span></td>
+                                    <td>Submitted trade request for MSFT</td>
+                                    <td>May 4, 2025 03:30 PM</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary view-details-btn" data-id="4">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Stock Query -->
+                                <tr class="activity-row" data-type="stock-query" data-client="1">
+                                    <td>John Doe</td>
+                                    <td><span class="activity-type type-stock-query">Stock Query</span></td>
+                                    <td>Compare AAPL and MSFT</td>
+                                    <td>May 4, 2025 01:12 PM</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary view-details-btn" data-id="5">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Login Action -->
+                                <tr class="activity-row" data-type="login" data-client="4">
+                                    <td>Emily Wilson</td>
+                                    <td><span class="activity-type type-login">Login</span></td>
+                                    <td>User logged in from Chrome/Windows</td>
+                                    <td>May 4, 2025 12:37 PM</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary view-details-btn" data-id="6">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- PDF Query -->
+                                <tr class="activity-row" data-type="pdf-query" data-client="3">
+                                    <td>Robert Johnson</td>
+                                    <td><span class="activity-type type-pdf-query">PDF Query</span></td>
+                                    <td>Analyze risks in annual report</td>
+                                    <td>May 4, 2025 11:05 AM</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary view-details-btn" data-id="7">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Cart Action -->
+                                <tr class="activity-row" data-type="cart" data-client="5">
+                                    <td>Michael Brown</td>
+                                    <td><span class="activity-type type-cart">Cart</span></td>
+                                    <td>Added AMZN to cart</td>
+                                    <td>May 3, 2025 03:12 PM</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary view-details-btn" data-id="8">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Trade Action -->
+                                <tr class="activity-row" data-type="trade" data-client="6">
+                                    <td>Sarah Thompson</td>
+                                    <td><span class="activity-type type-trade">Trade</span></td>
+                                    <td>Submitted trade request for VOO</td>
+                                    <td>May 2, 2025 10:45 AM</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary view-details-btn" data-id="9">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Login Action -->
+                                <tr class="activity-row" data-type="login" data-client="5">
+                                    <td>Michael Brown</td>
+                                    <td><span class="activity-type type-login">Login</span></td>
+                                    <td>User logged in from Safari/iOS</td>
+                                    <td>May 2, 2025 09:30 AM</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary view-details-btn" data-id="10">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Stock Query -->
+                                <tr class="activity-row" data-type="stock-query" data-client="6">
+                                    <td>Sarah Thompson</td>
+                                    <td><span class="activity-type type-stock-query">Stock Query</span></td>
+                                    <td>Latest news on Tesla (TSLA)</td>
+                                    <td>May 1, 2025 02:15 PM</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary view-details-btn" data-id="11">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- PDF Query -->
+                                <tr class="activity-row" data-type="pdf-query" data-client="1">
+                                    <td>John Doe</td>
+                                    <td><span class="activity-type type-pdf-query">PDF Query</span></td>
+                                    <td>Extract revenue projections from Q1 report</td>
+                                    <td>May 1, 2025 11:45 AM</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary view-details-btn" data-id="12">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <nav aria-label="Activity pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Details Modal -->
+    <div class="modal fade" id="activityDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Activity Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="activity-details-content">
+                        <!-- Content will be dynamically filled -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize activity details modal
+            const activityDetailsModal = new bootstrap.Modal(document.getElementById('activityDetailsModal'));
+            
+            // View details buttons
+            document.querySelectorAll('.view-details-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const activityId = this.getAttribute('data-id');
+                    const row = this.closest('.activity-row');
+                    const client = row.children[0].textContent;
+                    const type = row.children[1].textContent;
+                    const details = row.children[2].textContent;
+                    const timestamp = row.children[3].textContent;
+                    
+                    // Generate mock activity details based on the activity type
+                    let detailsContent = '';
+                    
+                    if (type.includes('Stock Query')) {
+                        detailsContent = generateStockQueryDetails(client, details, timestamp, activityId);
+                    } else if (type.includes('PDF Query')) {
+                        detailsContent = generatePdfQueryDetails(client, details, timestamp, activityId);
+                    } else if (type.includes('Cart')) {
+                        detailsContent = generateCartDetails(client, details, timestamp, activityId);
+                    } else if (type.includes('Trade')) {
+                        detailsContent = generateTradeDetails(client, details, timestamp, activityId);
+                    } else if (type.includes('Login')) {
+                        detailsContent = generateLoginDetails(client, details, timestamp, activityId);
+                    }
+                    
+                    // Update modal content
+                    document.getElementById('activity-details-content').innerHTML = detailsContent;
+                    
+                    // Show modal
+                    activityDetailsModal.show();
+                });
+            });
+            
+            // Helper functions to generate activity details
+            function generateStockQueryDetails(client, details, timestamp, activityId) {
+                return `
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <strong>Stock Query Activity</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Client:</strong></div>
+                                <div class="col-md-8">${client}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Query:</strong></div>
+                                <div class="col-md-8">${details}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Timestamp:</strong></div>
+                                <div class="col-md-8">${timestamp}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Activity ID:</strong></div>
+                                <div class="col-md-8">ACT-${10000 + parseInt(activityId)}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Session ID:</strong></div>
+                                <div class="col-md-8">SES-${20000 + parseInt(activityId)}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>IP Address:</strong></div>
+                                <div class="col-md-8">192.168.1.${100 + parseInt(activityId)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <strong>AI Response</strong>
+                        </div>
+                        <div class="card-body">
+                            <p>The AI provided the following stock information:</p>
+                            <div class="p-3 bg-light rounded">
+                                <p><strong>Stock Analysis:</strong></p>
+                                <p>Based on the query "${details}", the AI system provided current price information, recent trends, and analyst recommendations.</p>
+                                <p>The response included data on stock price, market capitalization, P/E ratio, recent news, and performance metrics.</p>
+                                <p><strong>User satisfaction rating:</strong> ⭐⭐⭐⭐ (4/5)</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function generatePdfQueryDetails(client, details, timestamp, activityId) {
+                return `
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <strong>PDF Query Activity</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Client:</strong></div>
+                                <div class="col-md-8">${client}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Query:</strong></div>
+                                <div class="col-md-8">${details}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Timestamp:</strong></div>
+                                <div class="col-md-8">${timestamp}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Activity ID:</strong></div>
+                                <div class="col-md-8">ACT-${10000 + parseInt(activityId)}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Document:</strong></div>
+                                <div class="col-md-8">Q1 2025 Financial Report.pdf (12.3 MB)</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Pages Analyzed:</strong></div>
+                                <div class="col-md-8">45</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <strong>AI Response</strong>
+                        </div>
+                        <div class="card-body">
+                            <p>The AI provided the following analysis:</p>
+                            <div class="p-3 bg-light rounded">
+                                <p><strong>PDF Analysis:</strong></p>
+                                <p>Based on the query "${details}", the AI system analyzed the document and extracted relevant information.</p>
+                                <p>The system identified key financial metrics, extracted tables and charts, and provided a summary of the findings.</p>
+                                <p><strong>User satisfaction rating:</strong> ⭐⭐⭐⭐⭐ (5/5)</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function generateCartDetails(client, details, timestamp, activityId) {
+                const stock = details.split(' ')[1];
+                return `
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <strong>Cart Activity</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Client:</strong></div>
+                                <div class="col-md-8">${client}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Action:</strong></div>
+                                <div class="col-md-8">${details}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Timestamp:</strong></div>
+                                <div class="col-md-8">${timestamp}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Activity ID:</strong></div>
+                                <div class="col-md-8">ACT-${10000 + parseInt(activityId)}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Cart ID:</strong></div>
+                                <div class="col-md-8">CART-${30000 + parseInt(activityId)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <strong>Stock Details</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Stock Symbol:</strong></div>
+                                <div class="col-md-8">${stock}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Quantity:</strong></div>
+                                <div class="col-md-8">5 shares</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Price at Add Time:</strong></div>
+                                <div class="col-md-8">$${(Math.random() * 200 + 100).toFixed(2)} per share</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Current Cart Items:</strong></div>
+                                <div class="col-md-8">2 stocks (${stock}, AAPL)</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function generateTradeDetails(client, details, timestamp, activityId) {
+                const stock = details.split(' ').pop();
+                return `
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <strong>Trade Activity</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Client:</strong></div>
+                                <div class="col-md-8">${client}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Action:</strong></div>
+                                <div class="col-md-8">${details}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Timestamp:</strong></div>
+                                <div class="col-md-8">${timestamp}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Activity ID:</strong></div>
+                                <div class="col-md-8">ACT-${10000 + parseInt(activityId)}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Trade Request ID:</strong></div>
+                                <div class="col-md-8">TR-${40000 + parseInt(activityId)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <strong>Trade Request Details</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Stock Symbol:</strong></div>
+                                <div class="col-md-8">${stock}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Trade Type:</strong></div>
+                                <div class="col-md-8">BUY</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Quantity:</strong></div>
+                                <div class="col-md-8">${Math.floor(Math.random() * 10 + 1)} shares</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Price at Request:</strong></div>
+                                <div class="col-md-8">$${(Math.random() * 300 + 100).toFixed(2)} per share</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Status:</strong></div>
+                                <div class="col-md-8"><span class="badge bg-warning">Pending Approval</span></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function generateLoginDetails(client, details, timestamp, activityId) {
+                return `
+                    <div class="card mb-3">
+                        <div class="card-header bg-light">
+                            <strong>Login Activity</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Client:</strong></div>
+                                <div class="col-md-8">${client}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Action:</strong></div>
+                                <div class="col-md-8">${details}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Timestamp:</strong></div>
+                                <div class="col-md-8">${timestamp}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Activity ID:</strong></div>
+                                <div class="col-md-8">ACT-${10000 + parseInt(activityId)}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Session ID:</strong></div>
+                                <div class="col-md-8">SES-${20000 + parseInt(activityId)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header bg-light">
+                            <strong>Access Details</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Browser/Device:</strong></div>
+                                <div class="col-md-8">${details.split('from ')[1]}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>IP Address:</strong></div>
+                                <div class="col-md-8">192.168.1.${100 + parseInt(activityId)}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Location:</strong></div>
+                                <div class="col-md-8">New York, United States</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Authentication Method:</strong></div>
+                                <div class="col-md-8">Password + 2FA</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4"><strong>Status:</strong></div>
+                                <div class="col-md-8"><span class="badge bg-success">Successful</span></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Filter functionality
+            const clientFilter = document.getElementById('client-filter');
+            const typeFilter = document.getElementById('activity-type-filter');
+            const searchInput = document.getElementById('activity-search');
+            
+            function applyFilters() {
+                const clientValue = clientFilter.value;
+                const typeValue = typeFilter.value;
+                const searchTerm = searchInput.value.toLowerCase();
+                const rows = document.querySelectorAll('.activity-row');
+                
+                rows.forEach(row => {
+                    const clientId = row.getAttribute('data-client');
+                    const type = row.getAttribute('data-type');
+                    const details = row.children[2].textContent.toLowerCase();
+                    const client = row.children[0].textContent.toLowerCase();
+                    
+                    // Check if row matches all filters
+                    const matchesClient = clientValue === 'all' || clientId === clientValue;
+                    const matchesType = typeValue === 'all' || type === typeValue;
+                    const matchesSearch = searchTerm === '' || 
+                                         details.includes(searchTerm) || 
+                                         client.includes(searchTerm);
+                    
+                    if (matchesClient && matchesType && matchesSearch) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            }
+            
+            // Add event listeners to filters
+            clientFilter.addEventListener('change', applyFilters);
+            typeFilter.addEventListener('change', applyFilters);
+            searchInput.addEventListener('input', applyFilters);
+            
+            // Date filter
+            document.getElementById('apply-date-filter').addEventListener('click', function() {
+                alert('Date filter would be applied in a real application.');
+            });
+            
+            // Export data
+            document.getElementById('export-btn').addEventListener('click', function() {
+                alert('In a real application, this would export the activity data as CSV or Excel.');
+            });
+            
+            // Logout functionality
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                // In a real app, handle logout
+                window.location.href = 'login.html';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expiration: int = 3600
     alphavantage_api_key: str
-    gemini_api_key: str = "AIzaSyDasrN3KX65DpwWeZvDtm1OIVakx0IhdYE"  # Fixed syntax error here
+    gemini_api_key: str = "AIzaSyCFZzV6ooLld21frocfPI-rq3NKHXwheGU"  # Fixed syntax error here
     frontend_url: str = "http://localhost:3000"
     websocket_url: str = "ws://localhost:8000"
     qdrant_url: str = "http://localhost:6333"

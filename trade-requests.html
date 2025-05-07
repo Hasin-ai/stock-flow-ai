@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Flow AI - Trade Requests</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+        }
+        .sidebar {
+            min-height: 100vh;
+            background-color: #212529;
+            color: white;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+        }
+        .sidebar .nav-link:hover {
+            color: rgba(255, 255, 255, 1);
+        }
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar .nav-link i {
+            margin-right: 0.5rem;
+        }
+        .main-content {
+            padding: 2rem;
+        }
+        .dashboard-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .trade-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            transition: transform 0.2s;
+            border-left: 4px solid #0d6efd;
+        }
+        .trade-card.sell {
+            border-left-color: #dc3545;
+        }
+        .trade-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .trade-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+        }
+        .trade-detail-item {
+            background-color: #f8f9fa;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar p-0">
+                <div class="d-flex flex-column h-100">
+                    <div class="p-3 text-center">
+                        <h3>Stock Flow AI</h3>
+                        <p class="mb-0">Admin Panel</p>
+                    </div>
+                    <hr class="text-white mt-0">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="admin-dashboard.html">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="clients.html">
+                                <i class="bi bi-people"></i> Clients
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="client-registrations.html">
+                                <i class="bi bi-person-plus"></i> Registration Requests
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="trade-requests.html">
+                                <i class="bi bi-arrow-left-right"></i> Trade Requests
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="chat-nav-link">
+                                <i class="bi bi-chat-dots"></i> Chat <span id="unread-badge" class="badge bg-danger ms-2 d-none">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="client-activity.html">
+                                <i class="bi bi-activity"></i> Activity Logs
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="mt-auto p-3">
+                        <button id="logout-btn" class="btn btn-outline-light w-100">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-10 main-content">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="bi bi-arrow-left-right me-2"></i> Pending Trade Requests</h2>
+                    <div>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-success" id="approve-all-btn">
+                                <i class="bi bi-check-lg"></i> Approve All
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Filter & Search -->
+                <div class="dashboard-card mb-4">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" id="trade-search" placeholder="Search by client name, stock symbol...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="trade-type-filter">
+                                <option value="all">All Types</option>
+                                <option value="buy">Buy Orders</option>
+                                <option value="sell">Sell Orders</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" id="trade-sort">
+                                <option value="date_desc">Date (Newest first)</option>
+                                <option value="date_asc">Date (Oldest first)</option>
+                                <option value="amount_desc">Amount (Highest first)</option>
+                                <option value="amount_asc">Amount (Lowest first)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Trade Requests -->
+                <div id="trades-container">
+                    <!-- Buy Order -->
+                    <div class="trade-card" data-type="buy">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary">BUY</span>
+                                    <h5 class="mb-0">AAPL (Apple Inc.)</h5>
+                                </div>
+                                <div class="text-muted mb-2">Requested by: John Doe</div>
+                                
+                                <div class="trade-details">
+                                    <div class="trade-detail-item">
+                                        <strong>Quantity:</strong> 10 shares
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Price:</strong> $175.25 per share
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Total:</strong> $1,752.50
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Order Type:</strong> Market
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Date:</strong> May 5, 2025
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#tradeNotes1">
+                                        <i class="bi bi-info-circle"></i> Client Notes
+                                    </button>
+                                </div>
+                                <div class="collapse mt-2" id="tradeNotes1">
+                                    <div class="card card-body bg-light">
+                                        <p class="mb-0">Looking to add Apple to my long-term portfolio ahead of their upcoming product announcement.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end d-flex flex-column justify-content-between">
+                                <div class="small text-muted mb-3">
+                                    Request ID: #TR-10542
+                                </div>
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button class="btn btn-success approve-trade-btn" data-id="1">
+                                        <i class="bi bi-check-lg"></i> Approve
+                                    </button>
+                                    <button class="btn btn-danger decline-trade-btn" data-id="1">
+                                        <i class="bi bi-x-lg"></i> Decline
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sell Order -->
+                    <div class="trade-card sell" data-type="sell">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-danger">SELL</span>
+                                    <h5 class="mb-0">MSFT (Microsoft Corp.)</h5>
+                                </div>
+                                <div class="text-muted mb-2">Requested by: Jane Smith</div>
+                                
+                                <div class="trade-details">
+                                    <div class="trade-detail-item">
+                                        <strong>Quantity:</strong> 5 shares
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Price:</strong> $380.50 per share
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Total:</strong> $1,902.50
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Order Type:</strong> Limit
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Date:</strong> May 4, 2025
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#tradeNotes2">
+                                        <i class="bi bi-info-circle"></i> Client Notes
+                                    </button>
+                                </div>
+                                <div class="collapse mt-2" id="tradeNotes2">
+                                    <div class="card card-body bg-light">
+                                        <p class="mb-0">Taking some profit after the recent run-up. Plan to reinvest in other tech stocks.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end d-flex flex-column justify-content-between">
+                                <div class="small text-muted mb-3">
+                                    Request ID: #TR-10541
+                                </div>
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button class="btn btn-success approve-trade-btn" data-id="2">
+                                        <i class="bi bi-check-lg"></i> Approve
+                                    </button>
+                                    <button class="btn btn-danger decline-trade-btn" data-id="2">
+                                        <i class="bi bi-x-lg"></i> Decline
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Buy Order -->
+                    <div class="trade-card" data-type="buy">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary">BUY</span>
+                                    <h5 class="mb-0">GOOG (Alphabet Inc.)</h5>
+                                </div>
+                                <div class="text-muted mb-2">Requested by: Robert Johnson</div>
+                                
+                                <div class="trade-details">
+                                    <div class="trade-detail-item">
+                                        <strong>Quantity:</strong> 2 shares
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Price:</strong> $165.81 per share
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Total:</strong> $331.62
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Order Type:</strong> Market
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Date:</strong> May 5, 2025
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#tradeNotes3">
+                                        <i class="bi bi-info-circle"></i> Client Notes
+                                    </button>
+                                </div>
+                                <div class="collapse mt-2" id="tradeNotes3">
+                                    <div class="card card-body bg-light">
+                                        <p class="mb-0">Starting small with Google after their recent AI announcements. Looking to hold long-term.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end d-flex flex-column justify-content-between">
+                                <div class="small text-muted mb-3">
+                                    Request ID: #TR-10543
+                                </div>
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button class="btn btn-success approve-trade-btn" data-id="3">
+                                        <i class="bi bi-check-lg"></i> Approve
+                                    </button>
+                                    <button class="btn btn-danger decline-trade-btn" data-id="3">
+                                        <i class="bi bi-x-lg"></i> Decline
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Buy Order -->
+                    <div class="trade-card" data-type="buy">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary">BUY</span>
+                                    <h5 class="mb-0">TSLA (Tesla Inc.)</h5>
+                                </div>
+                                <div class="text-muted mb-2">Requested by: Emily Wilson</div>
+                                
+                                <div class="trade-details">
+                                    <div class="trade-detail-item">
+                                        <strong>Quantity:</strong> 3 shares
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Price:</strong> $210.15 per share
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Total:</strong> $630.45
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Order Type:</strong> Market
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Date:</strong> May 3, 2025
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#tradeNotes4">
+                                        <i class="bi bi-info-circle"></i> Client Notes
+                                    </button>
+                                </div>
+                                <div class="collapse mt-2" id="tradeNotes4">
+                                    <div class="card card-body bg-light">
+                                        <p class="mb-0">Interested in Tesla's clean energy initiatives. Want to add this to my growing green portfolio.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end d-flex flex-column justify-content-between">
+                                <div class="small text-muted mb-3">
+                                    Request ID: #TR-10540
+                                </div>
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button class="btn btn-success approve-trade-btn" data-id="4">
+                                        <i class="bi bi-check-lg"></i> Approve
+                                    </button>
+                                    <button class="btn btn-danger decline-trade-btn" data-id="4">
+                                        <i class="bi bi-x-lg"></i> Decline
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sell Order -->
+                    <div class="trade-card sell" data-type="sell">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-danger">SELL</span>
+                                    <h5 class="mb-0">AMZN (Amazon.com Inc.)</h5>
+                                </div>
+                                <div class="text-muted mb-2">Requested by: Michael Brown</div>
+                                
+                                <div class="trade-details">
+                                    <div class="trade-detail-item">
+                                        <strong>Quantity:</strong> 4 shares
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Price:</strong> $190.25 per share
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Total:</strong> $761.00
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Order Type:</strong> Limit
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Date:</strong> May 2, 2025
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#tradeNotes5">
+                                        <i class="bi bi-info-circle"></i> Client Notes
+                                    </button>
+                                </div>
+                                <div class="collapse mt-2" id="tradeNotes5">
+                                    <div class="card card-body bg-light">
+                                        <p class="mb-0">Rebalancing my portfolio after recent gains. Plan to diversify into more dividend stocks.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end d-flex flex-column justify-content-between">
+                                <div class="small text-muted mb-3">
+                                    Request ID: #TR-10538
+                                </div>
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button class="btn btn-success approve-trade-btn" data-id="5">
+                                        <i class="bi bi-check-lg"></i> Approve
+                                    </button>
+                                    <button class="btn btn-danger decline-trade-btn" data-id="5">
+                                        <i class="bi bi-x-lg"></i> Decline
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Buy Order -->
+                    <div class="trade-card" data-type="buy">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary">BUY</span>
+                                    <h5 class="mb-0">VOO (Vanguard S&P 500 ETF)</h5>
+                                </div>
+                                <div class="text-muted mb-2">Requested by: Sarah Thompson</div>
+                                
+                                <div class="trade-details">
+                                    <div class="trade-detail-item">
+                                        <strong>Quantity:</strong> 6 shares
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Price:</strong> $450.63 per share
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Total:</strong> $2,703.78
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Order Type:</strong> Market
+                                    </div>
+                                    <div class="trade-detail-item">
+                                        <strong>Date:</strong> May 2, 2025
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#tradeNotes6">
+                                        <i class="bi bi-info-circle"></i> Client Notes
+                                    </button>
+                                </div>
+                                <div class="collapse mt-2" id="tradeNotes6">
+                                    <div class="card card-body bg-light">
+                                        <p class="mb-0">Adding more to my core ETF holdings for long-term retirement planning.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end d-flex flex-column justify-content-between">
+                                <div class="small text-muted mb-3">
+                                    Request ID: #TR-10539
+                                </div>
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button class="btn btn-success approve-trade-btn" data-id="6">
+                                        <i class="bi bi-check-lg"></i> Approve
+                                    </button>
+                                    <button class="btn btn-danger decline-trade-btn" data-id="6">
+                                        <i class="bi bi-x-lg"></i> Decline
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pagination -->
+                <nav aria-label="Trade pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Decline Trade Modal -->
+    <div class="modal fade" id="declineTradeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Decline Trade Request</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="decline-trade-form">
+                        <input type="hidden" id="declined-trade-id">
+                        <div class="mb-3">
+                            <label for="decline-trade-reason" class="form-label">Reason for Declining</label>
+                            <select class="form-select mb-3" id="decline-trade-reason">
+                                <option value="">Select a reason...</option>
+                                <option value="insufficient_funds">Insufficient funds</option>
+                                <option value="market_conditions">Current market conditions</option>
+                                <option value="price_volatility">Price volatility</option>
+                                <option value="regulatory">Regulatory concerns</option>
+                                <option value="other">Other reason</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="decline-trade-notes" class="form-label">Additional Notes</label>
+                            <textarea class="form-control" id="decline-trade-notes" rows="3" placeholder="Provide additional details about why this trade is being declined..."></textarea>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="suggest-alternative" checked>
+                            <label class="form-check-label" for="suggest-alternative">
+                                Suggest alternative trading options
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirm-decline-trade-btn">Confirm Decline</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Search functionality
+            const searchInput = document.getElementById('trade-search');
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const tradeCards = document.querySelectorAll('.trade-card');
+                
+                tradeCards.forEach(card => {
+                    const stockName = card.querySelector('h5').textContent.toLowerCase();
+                    const clientName = card.querySelector('.text-muted').textContent.toLowerCase();
+                    
+                    if (stockName.includes(searchTerm) || clientName.includes(searchTerm)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+            
+            // Filter by trade type
+            const typeFilter = document.getElementById('trade-type-filter');
+            typeFilter.addEventListener('change', function() {
+                const filterType = this.value;
+                const tradeCards = document.querySelectorAll('.trade-card');
+                
+                tradeCards.forEach(card => {
+                    if (filterType === 'all' || card.getAttribute('data-type') === filterType) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+            
+            // Sort functionality - basic implementation
+            const sortSelect = document.getElementById('trade-sort');
+            sortSelect.addEventListener('change', function() {
+                // In a real app, this would sort the trades based on the selected option
+                alert('Sorting option changed to: ' + this.value);
+            });
+            
+            // Approve trade buttons
+            document.querySelectorAll('.approve-trade-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const tradeId = this.getAttribute('data-id');
+                    if (confirm('Are you sure you want to approve this trade request?')) {
+                        // In a real app, make API call to approve
+                        this.closest('.trade-card').remove();
+                        
+                        // Show a success message
+                        const alertHtml = `
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                Trade request successfully approved. The client will be notified.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+                        document.querySelector('.main-content').insertAdjacentHTML('afterbegin', alertHtml);
+                    }
+                });
+            });
+            
+            // Decline trade buttons
+            const declineTradeModal = new bootstrap.Modal(document.getElementById('declineTradeModal'));
+            
+            document.querySelectorAll('.decline-trade-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const tradeId = this.getAttribute('data-id');
+                    document.getElementById('declined-trade-id').value = tradeId;
+                    declineTradeModal.show();
+                });
+            });
+            
+            // Confirm decline button
+            document.getElementById('confirm-decline-trade-btn').addEventListener('click', function() {
+                const tradeId = document.getElementById('declined-trade-id').value;
+                const reason = document.getElementById('decline-trade-reason').value;
+                
+                if (!reason) {
+                    alert('Please select a reason for declining.');
+                    return;
+                }
+                
+                // In a real app, make API call to decline with the reason and notes
+                const tradeCard = document.querySelector(`.approve-trade-btn[data-id="${tradeId}"]`).closest('.trade-card');
+                tradeCard.remove();
+                
+                // Show a success message
+                const alertHtml = `
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        Trade request has been declined. The client will be notified.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+                document.querySelector('.main-content').insertAdjacentHTML('afterbegin', alertHtml);
+                
+                // Close modal and reset form
+                declineTradeModal.hide();
+                document.getElementById('decline-trade-form').reset();
+            });
+            
+            // Approve all button
+            document.getElementById('approve-all-btn').addEventListener('click', function() {
+                if (confirm('Are you sure you want to approve all pending trade requests?')) {
+                    // In a real app, make API call to approve all
+                    document.querySelectorAll('.trade-card').forEach(card => {
+                        card.remove();
+                    });
+                    
+                    // Show a success message
+                    const alertHtml = `
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            All trade requests have been approved. Clients will be notified.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                    document.querySelector('.main-content').insertAdjacentHTML('afterbegin', alertHtml);
+                }
+            });
+            
+            // Logout functionality
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                // In a real app, handle logout
+                window.location.href = 'login.html';
+            });
+        });
+    </script>
+</body>
+</html>

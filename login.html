@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - StockFlow AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .login-container {
+            max-width: 450px;
+            margin: 100px auto;
+            padding: 30px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #0d6efd;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 10px;
+            margin-top: 20px;
+        }
+        .signup-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="login-container">
+            <div class="logo">
+                <h2>StockFlow AI</h2>
+                <p>Smart Trading Assistant</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password" placeholder="Enter your password" required>
+                </div>
+                
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="rememberMe">
+                    <label class="form-check-label" for="rememberMe">Remember me</label>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <a href="#" class="text-decoration-none">Forgot password?</a>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-login">Login</button>
+            </form>
+            
+            <div class="signup-link">
+                <p>Don't have an account? <a href="signup.html" class="text-decoration-none">Sign up</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                // Make API call to login endpoint
+                const response = await fetch('http://localhost:8000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'username': email, // Backend expects 'username' for email
+                        'password': password
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Login failed');
+                }
+                
+                const data = await response.json();
+                
+                // Debug: Log the response data
+                // console.log('Login response data:', data);
+                
+                // Save token and user information in localStorage
+                localStorage.setItem('token', data.access_token);
+                localStorage.setItem('user_id', data.user_id);
+                localStorage.setItem('token_type', data.token_type);
+                
+                // Make sure role exists before setting it
+                if (data.role) {
+                    localStorage.setItem('role', data.role);
+                    console.log('Role saved in localStorage:', data.role);
+                } else {
+                    console.error('Role not found in response data:', data);
+                }
+                
+                // Redirect based on user role
+                if (data.role === 'admin') {
+                    window.location.href = './admin-dashboard.html';
+                } else {
+                    window.location.href = './client-dashboard.html';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Login failed. Please check your credentials and try again.');
+            }
+        });
+    </script>
+</body>
+</html>

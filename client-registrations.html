@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Flow AI - Client Registrations</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+        }
+        .sidebar {
+            min-height: 100vh;
+            background-color: #212529;
+            color: white;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.7);
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+        }
+        .sidebar .nav-link:hover {
+            color: rgba(255, 255, 255, 1);
+        }
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .sidebar .nav-link i {
+            margin-right: 0.5rem;
+        }
+        .main-content {
+            padding: 2rem;
+        }
+        .dashboard-card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .registration-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            transition: transform 0.2s;
+        }
+        .registration-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar p-0">
+                <div class="d-flex flex-column h-100">
+                    <div class="p-3 text-center">
+                        <h3>Stock Flow AI</h3>
+                        <p class="mb-0">Admin Panel</p>
+                    </div>
+                    <hr class="text-white mt-0">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link" href="admin-dashboard.html">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="clients.html">
+                                <i class="bi bi-people"></i> Clients
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="client-registrations.html">
+                                <i class="bi bi-person-plus"></i> Registration Requests
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="trade-requests.html">
+                                <i class="bi bi-arrow-left-right"></i> Trade Requests
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#" id="chat-nav-link">
+                                <i class="bi bi-chat-dots"></i> Chat <span id="unread-badge" class="badge bg-danger ms-2 d-none">0</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="client-activity.html">
+                                <i class="bi bi-activity"></i> Activity Logs
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="mt-auto p-3">
+                        <button id="logout-btn" class="btn btn-outline-light w-100">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-10 main-content">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="bi bi-person-plus me-2"></i> Pending Client Registrations</h2>
+                    <div>
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-success" id="approve-all-btn">
+                                <i class="bi bi-check-lg"></i> Approve All
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Filter & Search -->
+                <div class="dashboard-card mb-4">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control" id="registration-search" placeholder="Search registrations by name or email...">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" id="registration-sort">
+                                <option value="date_desc">Registration Date (Newest first)</option>
+                                <option value="date_asc">Registration Date (Oldest first)</option>
+                                <option value="name_asc">Name (A-Z)</option>
+                                <option value="name_desc">Name (Z-A)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Registrations List -->
+                <div id="registrations-container">
+                    <div class="registration-card">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5>Michael Brown</h5>
+                                <div class="text-muted mb-2">michael.brown@example.com</div>
+                                <div class="small text-muted mb-1">
+                                    <i class="bi bi-calendar-date"></i> Registration Date: May 4, 2025
+                                </div>
+                                <div class="small text-muted mb-1">
+                                    <i class="bi bi-telephone"></i> Phone: +1 (555) 123-4567
+                                </div>
+                                <div class="mt-3">
+                                    <span class="badge bg-primary">Investment Experience: Intermediate</span>
+                                    <span class="badge bg-secondary">Trading Type: Stocks</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="mb-3">
+                                    <div class="small text-muted mb-1">Additional Information:</div>
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#additionalInfo1">
+                                        <i class="bi bi-info-circle"></i> View
+                                    </button>
+                                </div>
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button class="btn btn-success approve-registration-btn" data-id="1">
+                                        <i class="bi bi-check-lg"></i> Approve
+                                    </button>
+                                    <button class="btn btn-danger decline-registration-btn" data-id="1">
+                                        <i class="bi bi-x-lg"></i> Decline
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="collapse mt-3" id="additionalInfo1">
+                            <div class="card card-body bg-light">
+                                <p class="mb-1"><strong>Referrer:</strong> Jane Smith</p>
+                                <p class="mb-1"><strong>Investment Goals:</strong> Long-term growth, Retirement planning</p>
+                                <p class="mb-0"><strong>Notes:</strong> I'm particularly interested in technology and renewable energy stocks. Looking for a platform that can help me make informed decisions.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="registration-card">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5>Emily Wilson</h5>
+                                <div class="text-muted mb-2">emily.wilson@example.com</div>
+                                <div class="small text-muted mb-1">
+                                    <i class="bi bi-calendar-date"></i> Registration Date: May 5, 2025
+                                </div>
+                                <div class="small text-muted mb-1">
+                                    <i class="bi bi-telephone"></i> Phone: +1 (555) 987-6543
+                                </div>
+                                <div class="mt-3">
+                                    <span class="badge bg-primary">Investment Experience: Beginner</span>
+                                    <span class="badge bg-secondary">Trading Type: Stocks, ETFs</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="mb-3">
+                                    <div class="small text-muted mb-1">Additional Information:</div>
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#additionalInfo2">
+                                        <i class="bi bi-info-circle"></i> View
+                                    </button>
+                                </div>
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button class="btn btn-success approve-registration-btn" data-id="2">
+                                        <i class="bi bi-check-lg"></i> Approve
+                                    </button>
+                                    <button class="btn btn-danger decline-registration-btn" data-id="2">
+                                        <i class="bi bi-x-lg"></i> Decline
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="collapse mt-3" id="additionalInfo2">
+                            <div class="card card-body bg-light">
+                                <p class="mb-1"><strong>Referrer:</strong> None</p>
+                                <p class="mb-1"><strong>Investment Goals:</strong> Savings for house down payment, Passive income</p>
+                                <p class="mb-0"><strong>Notes:</strong> I'm new to investing but eager to learn. I want to build a portfolio of safe investments with some growth potential.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="registration-card">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5>David Chen</h5>
+                                <div class="text-muted mb-2">david.chen@example.com</div>
+                                <div class="small text-muted mb-1">
+                                    <i class="bi bi-calendar-date"></i> Registration Date: May 5, 2025
+                                </div>
+                                <div class="small text-muted mb-1">
+                                    <i class="bi bi-telephone"></i> Phone: +1 (555) 456-7890
+                                </div>
+                                <div class="mt-3">
+                                    <span class="badge bg-primary">Investment Experience: Advanced</span>
+                                    <span class="badge bg-secondary">Trading Type: Stocks, Options</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="mb-3">
+                                    <div class="small text-muted mb-1">Additional Information:</div>
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#additionalInfo3">
+                                        <i class="bi bi-info-circle"></i> View
+                                    </button>
+                                </div>
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button class="btn btn-success approve-registration-btn" data-id="3">
+                                        <i class="bi bi-check-lg"></i> Approve
+                                    </button>
+                                    <button class="btn btn-danger decline-registration-btn" data-id="3">
+                                        <i class="bi bi-x-lg"></i> Decline
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="collapse mt-3" id="additionalInfo3">
+                            <div class="card card-body bg-light">
+                                <p class="mb-1"><strong>Referrer:</strong> Robert Johnson</p>
+                                <p class="mb-1"><strong>Investment Goals:</strong> Active trading, Capital appreciation</p>
+                                <p class="mb-0"><strong>Notes:</strong> I've been trading for 5+ years through other platforms. Looking for more advanced analytics and AI-driven insights to improve my trading strategy.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="registration-card">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5>Amanda Parker</h5>
+                                <div class="text-muted mb-2">amanda.parker@example.com</div>
+                                <div class="small text-muted mb-1">
+                                    <i class="bi bi-calendar-date"></i> Registration Date: May 3, 2025
+                                </div>
+                                <div class="small text-muted mb-1">
+                                    <i class="bi bi-telephone"></i> Phone: +1 (555) 234-5678
+                                </div>
+                                <div class="mt-3">
+                                    <span class="badge bg-primary">Investment Experience: Intermediate</span>
+                                    <span class="badge bg-secondary">Trading Type: Stocks, Mutual Funds</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="mb-3">
+                                    <div class="small text-muted mb-1">Additional Information:</div>
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#additionalInfo4">
+                                        <i class="bi bi-info-circle"></i> View
+                                    </button>
+                                </div>
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button class="btn btn-success approve-registration-btn" data-id="4">
+                                        <i class="bi bi-check-lg"></i> Approve
+                                    </button>
+                                    <button class="btn btn-danger decline-registration-btn" data-id="4">
+                                        <i class="bi bi-x-lg"></i> Decline
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="collapse mt-3" id="additionalInfo4">
+                            <div class="card card-body bg-light">
+                                <p class="mb-1"><strong>Referrer:</strong> None</p>
+                                <p class="mb-1"><strong>Investment Goals:</strong> College fund for children, Dividend income</p>
+                                <p class="mb-0"><strong>Notes:</strong> I want to set up a long-term investment strategy for my family's future. Looking for a platform that can guide me through building a diverse portfolio.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="registration-card">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h5>Daniel Lee</h5>
+                                <div class="text-muted mb-2">daniel.lee@example.com</div>
+                                <div class="small text-muted mb-1">
+                                    <i class="bi bi-calendar-date"></i> Registration Date: May 3, 2025
+                                </div>
+                                <div class="small text-muted mb-1">
+                                    <i class="bi bi-telephone"></i> Phone: +1 (555) 876-5432
+                                </div>
+                                <div class="mt-3">
+                                    <span class="badge bg-primary">Investment Experience: Beginner</span>
+                                    <span class="badge bg-secondary">Trading Type: ETFs, Index Funds</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <div class="mb-3">
+                                    <div class="small text-muted mb-1">Additional Information:</div>
+                                    <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#additionalInfo5">
+                                        <i class="bi bi-info-circle"></i> View
+                                    </button>
+                                </div>
+                                <div class="d-flex gap-2 justify-content-end">
+                                    <button class="btn btn-success approve-registration-btn" data-id="5">
+                                        <i class="bi bi-check-lg"></i> Approve
+                                    </button>
+                                    <button class="btn btn-danger decline-registration-btn" data-id="5">
+                                        <i class="bi bi-x-lg"></i> Decline
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="collapse mt-3" id="additionalInfo5">
+                            <div class="card card-body bg-light">
+                                <p class="mb-1"><strong>Referrer:</strong> John Doe</p>
+                                <p class="mb-1"><strong>Investment Goals:</strong> Retirement planning, Wealth accumulation</p>
+                                <p class="mb-0"><strong>Notes:</strong> I've just started my career and want to begin investing for the long term. Looking for educational resources and guidance on building a strong portfolio.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pagination -->
+                <nav aria-label="Registration pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <!-- Decline Confirmation Modal -->
+    <div class="modal fade" id="declineModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Decline Registration</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="decline-form">
+                        <input type="hidden" id="declined-registration-id">
+                        <div class="mb-3">
+                            <label for="decline-reason" class="form-label">Reason for Declining</label>
+                            <select class="form-select mb-3" id="decline-reason">
+                                <option value="">Select a reason...</option>
+                                <option value="incomplete">Incomplete information</option>
+                                <option value="suspicious">Suspicious activity</option>
+                                <option value="duplicate">Duplicate account</option>
+                                <option value="policy">Policy violation</option>
+                                <option value="other">Other reason</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="decline-notes" class="form-label">Additional Notes</label>
+                            <textarea class="form-control" id="decline-notes" rows="3" placeholder="Provide additional details about why this registration is being declined..."></textarea>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="send-notification" checked>
+                            <label class="form-check-label" for="send-notification">
+                                Send email notification to applicant
+                            </label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirm-decline-btn">Confirm Decline</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Search functionality
+            const searchInput = document.getElementById('registration-search');
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const registrationCards = document.querySelectorAll('.registration-card');
+                
+                registrationCards.forEach(card => {
+                    const name = card.querySelector('h5').textContent.toLowerCase();
+                    const email = card.querySelector('.text-muted').textContent.toLowerCase();
+                    
+                    if (name.includes(searchTerm) || email.includes(searchTerm)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+            
+            // Sort functionality - basic implementation
+            const sortSelect = document.getElementById('registration-sort');
+            sortSelect.addEventListener('change', function() {
+                // In a real app, this would sort the registrations based on the selected option
+                alert('Sorting option changed to: ' + this.value);
+            });
+            
+            // Approve registration buttons
+            document.querySelectorAll('.approve-registration-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const registrationId = this.getAttribute('data-id');
+                    if (confirm('Are you sure you want to approve this registration?')) {
+                        // In a real app, make API call to approve
+                        this.closest('.registration-card').remove();
+                        
+                        // Show a success message
+                        const alertHtml = `
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                Registration successfully approved. The client will be notified.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+                        document.querySelector('.main-content').insertAdjacentHTML('afterbegin', alertHtml);
+                    }
+                });
+            });
+            
+            // Decline registration buttons
+            const declineModal = new bootstrap.Modal(document.getElementById('declineModal'));
+            
+            document.querySelectorAll('.decline-registration-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const registrationId = this.getAttribute('data-id');
+                    document.getElementById('declined-registration-id').value = registrationId;
+                    declineModal.show();
+                });
+            });
+            
+            // Confirm decline button
+            document.getElementById('confirm-decline-btn').addEventListener('click', function() {
+                const registrationId = document.getElementById('declined-registration-id').value;
+                const reason = document.getElementById('decline-reason').value;
+                
+                if (!reason) {
+                    alert('Please select a reason for declining.');
+                    return;
+                }
+                
+                // In a real app, make API call to decline with the reason and notes
+                const registrationCard = document.querySelector(`.approve-registration-btn[data-id="${registrationId}"]`).closest('.registration-card');
+                registrationCard.remove();
+                
+                // Show a success message
+                const alertHtml = `
+                    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                        Registration has been declined. ${document.getElementById('send-notification').checked ? 'The applicant will be notified.' : ''}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+                document.querySelector('.main-content').insertAdjacentHTML('afterbegin', alertHtml);
+                
+                // Close modal and reset form
+                declineModal.hide();
+                document.getElementById('decline-form').reset();
+            });
+            
+            // Approve all button
+            document.getElementById('approve-all-btn').addEventListener('click', function() {
+                if (confirm('Are you sure you want to approve all pending registrations?')) {
+                    // In a real app, make API call to approve all
+                    document.querySelectorAll('.registration-card').forEach(card => {
+                        card.remove();
+                    });
+                    
+                    // Show a success message
+                    const alertHtml = `
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            All registrations have been approved. The clients will be notified.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                    document.querySelector('.main-content').insertAdjacentHTML('afterbegin', alertHtml);
+                }
+            });
+            
+            // Logout functionality
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                // In a real app, handle logout
+                window.location.href = 'login.html';
+            });
+        });
+    </script>
+</body>
+</html>
