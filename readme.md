@@ -50,15 +50,15 @@
 
         -   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
-    The backend will run on `localhost:8080`
+    The backend will run on `localhost:8000`
 
 2.  Start the frontend:
 
 -   Simply run the frontend through vscode live server
 
-    The frontend will be available at `localhost:5050`
+    The frontend will be available at `localhost:5500`
 
 ## Verification
 
--   Backend API: http://localhost:8080
--   Frontend interface: http://localhost:5050
+-   Backend API: http://localhost:8000
+-   Frontend interface: http://localhost:5500
