@@ -1,3 +1,257 @@
+
+
+
+
+# 📈 Stock Trading Web Application API Documentation
+
+**Version:** 0.1.0  
+**OpenAPI Specification:** 3.1
+
+---
+
+## 🧭 Overview
+
+This API provides functionality for user authentication, stock querying, PDF management, trade operations, and administrative features.
+
+### 🔗 Base URL
+
+All endpoints are relative to the base URL of the API.
+
+---
+
+## 🔐 Authentication
+
+Most endpoints require authentication. After logging in, include the following header:
+
+```
+Authorization: Bearer {token}
+```
+
+---
+
+## 📌 Endpoints
+
+### 🧑 Authentication
+
+#### ➕ Register
+
+- **URL:** `/api/auth/register`
+- **Method:** `POST`
+- **Description:** Register a new user account
+- **Request Body:**
+```json
+{
+  "username": "string",
+  "email": "string",
+  "password": "string",
+  "fullName": "string"
+}
+```
+- **Response:**
+```json
+{
+  "user_id": "string",
+  "username": "string",
+  "email": "string",
+  "status": "pending",
+  "message": "Registration successful. Approval pending."
+}
+```
+
+#### 🔑 Login
+
+- **URL:** `/api/auth/login`
+- **Method:** `POST`
+- **Description:** Authenticate and receive an access token
+- **Request Body:**
+```json
+{
+  "username": "string",
+  "password": "string"
+}
+```
+- **Response:**
+```json
+{
+  "access_token": "string",
+  "token_type": "Bearer",
+  "user": {
+    "user_id": "string",
+    "username": "string",
+    "role": "string"
+  }
+}
+```
+
+---
+
+### 📉 Stock Queries
+
+#### 🔍 Query Stock
+
+- **URL:** `/api/stock/query`
+- **Method:** `POST`
+- **Description:** Query stock information
+- **Request Body:**
+```json
+{
+  "symbol": "string",
+  "date_range": {
+    "start": "YYYY-MM-DD",
+    "end": "YYYY-MM-DD"
+  },
+  "parameters": ["price", "volume", "market_cap"]
+}
+```
+- **Response:**
+```json
+{
+  "symbol": "string",
+  "name": "string",
+  "data": [
+    {
+      "date": "string",
+      "price": "number",
+      "volume": "number",
+      "market_cap": "number"
+    }
+  ],
+  "summary": {
+    "average_price": "number",
+    "price_change": "number",
+    "price_change_percent": "number"
+  }
+}
+```
+
+---
+
+### 📄 PDF Operations
+
+#### ⬆️ Upload PDF
+
+- **URL:** `/api/pdf/upload`
+- **Method:** `POST`
+- **Description:** Upload a PDF document
+- **Request Type:** `multipart/form-data`
+
+#### 📑 Query PDF
+
+- **URL:** `/api/pdf/query`
+- **Method:** `POST`
+- **Description:** Query information from an uploaded PDF
+- **Request Body:**
+```json
+{
+  "document_id": "string",
+  "query": "string"
+}
+```
+- **Response:**
+```json
+{
+  "document_id": "string",
+  "query": "string",
+  "results": [
+    {
+      "page": "number",
+      "text": "string",
+      "relevance": "number"
+    }
+  ]
+}
+```
+
+---
+
+## 📚 WebSocket Endpoints
+
+| Endpoint | Description |
+|----------|-------------|
+| `/ws/debug/token` | Token debugging |
+| `/ws/chat/partners` | Retrieve chat partners |
+| `/ws/chat/history/{user_id}` | Get chat history |
+| `/ws/chat/send` | Send a message |
+| `/ws/chat/read/{sender_id}` | Mark messages as read |
+| `/ws/chat/unread/count` | Get unread count |
+| `/ws/chat/unread` | Get all unread messages |
+
+---
+
+## 🏠 Root Endpoint
+
+- **URL:** `/`
+- **Method:** `GET`
+- **Response:**
+```json
+{
+  "name": "Stock Trading Web Application API",
+  "version": "0.1.0",
+  "status": "active"
+}
+```
+
+---
+
+## 🧬 Schema Definitions
+
+### User
+```json
+{
+  "user_id": "string",
+  "username": "string",
+  "email": "string",
+  "fullName": "string",
+  "role": "client|admin",
+  "status": "active|pending|suspended",
+  "created_at": "datetime"
+}
+```
+
+### Trade
+```json
+{
+  "trade_id": "string",
+  "user_id": "string",
+  "symbol": "string",
+  "quantity": "number",
+  "price": "number",
+  "action": "buy|sell",
+  "status": "pending|approved|rejected|completed",
+  "created_at": "datetime",
+  "updated_at": "datetime"
+}
+```
+
+---
+
+## ⚠️ Error Responses
+
+All errors follow this format:
+```json
+{
+  "error": true,
+  "code": "string",
+  "message": "string",
+  "details": "object (optional)"
+}
+```
+
+### Common Error Codes
+
+| Code | Description |
+|------|-------------|
+| 400  | Bad Request |
+| 401  | Unauthorized |
+| 403  | Forbidden |
+| 404  | Not Found |
+| 409  | Conflict |
+| 422  | Unprocessable Entity |
+| 500  | Internal Server Error |
+
+---
+
+> For further updates and contributions, feel free to fork this repo and submit a pull request.
 # Installation Guide
 
 ## Setup Process
